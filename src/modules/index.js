@@ -1,0 +1,1 @@
+export { makeModule as makeGasModule } from "./gas/index.js";
