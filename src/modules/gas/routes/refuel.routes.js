@@ -1,13 +1,11 @@
 import express from 'express'
-import { createRefuel, getRefuelInfo, updateRefuel, deleteRefuel } from '../controllers/refuel.controllers.js'
+import { createRefuel, getRefuel, updateRefuel, deleteRefuel } from '../controllers/refuel.controllers.js'
 
 const router = express.Router()
 
-// console.log(`creating refuel methods...`);
-
 router.post('/', createRefuel)
-router.get('/:_id', getRefuelInfo)
+router.get('/:_id', getRefuel)
 router.patch('/:_id', updateRefuel)
-router.delete('/:_d', deleteRefuel)
+router.delete('/:_id', deleteRefuel)
 
 export {router as refuelRoutes }

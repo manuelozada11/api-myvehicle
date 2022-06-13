@@ -1,13 +1,16 @@
-const makeRepository = (RefuelModel) => {
-    const createRefuel = () => {}
-
-    const getRefuelInfo = () => {}
-    
-    const updateRefuel = () => {}
-    
-    const deleteRefuel = () => {}
-
-    return { createRefuel, getRefuelInfo, updateRefuel, deleteRefuel }
+export const makeRepository = (RefuelModel) => {
+    return { 
+        createRefuel: (data) => {
+            return RefuelModel.create(data)
+        }, 
+        getRefuel: (_id) => {
+            return RefuelModel.findById(_id)
+        },  
+        updateRefuel: (data) => {
+            console.log(data)
+        }, 
+        deleteRefuel: (data) => {
+            console.log(data)
+        }
+    }
 }
-
-export default makeRepository

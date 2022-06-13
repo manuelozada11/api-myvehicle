@@ -1,14 +1,22 @@
 import 'dotenv/config'
-// import '../database.js'
 import {setupServer, startServer} from './modules/shared/server.js'
 import {makeGasModule} from './modules/index.js'
+import { varValidates } from './modules/config/validation.js'
+import { dbConnect } from './modules/shared/database.js'
 
-const main = () => {
-    const server = setupServer()
+const main = async () => {
+    try {
+        varValidates()
+        const server = setupServer()
 
-    makeGasModule(server)
-    
-    startServer(server)
+        makeGasModule(server)
+        await dbConnect()
+        
+        startServer(server)
+    } catch (err) {
+        console.error(err)
+        process.exit(0)
+    }
 }
 
 main()

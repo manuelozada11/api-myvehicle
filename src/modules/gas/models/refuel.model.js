@@ -1,12 +1,20 @@
-import mongoose, {Schema} from "mongoose";
+import mongoose from "mongoose";
 
-const refuelSchema = new Schema({
-    _id: mongoose.Types.ObjectId,
-    amountPaid: { type: Schema.Types.Decimal128, required: true },
-    lts: { type: Schema.Types.Decimal128, required: true },
-    date: { type: Schema.Types.Date, required: true },
-    pricePerLts: { type: Schema.Types.Decimal128, required: true },
-    gasStation: { type: String }
+const refuelSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    fuel: { type: Number, required: true },
+    amount: { type: Number, required: true },
+    quantity: { type: Number, required: true },
+    kms: { type: Number },
+    gasStation: {
+        name: { type: String },
+        location: { type: String },
+        pricePerLt: { type: Number, required: true },
+    },
+    // user: {
+    //     _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    //     fullname: { type: String, required: true }
+    // }
 }, { timestamps: true })
 
-export default mongoose.model('Refuel', refuelSchema)
+export const RefuelModel = mongoose.model('Refuel', refuelSchema)
