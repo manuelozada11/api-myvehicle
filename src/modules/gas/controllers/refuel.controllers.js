@@ -30,6 +30,17 @@ export const getRefuel = async (req, res) => {
     }
 }
 
+export const getRefuels = async (req, res) => {
+    try {
+        const refuels = await refuelService.getRefuels({});
+
+        res.status(200).json({ message: 'connection success', refuel: refuels })
+    } catch (err) {
+        console.log(err)
+        res.status(err.code).json({message: err.message})
+    }
+}
+
 export const updateRefuel = async (req, res) => {
     try {
         const { _id } = req.params;

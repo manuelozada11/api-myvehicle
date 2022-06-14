@@ -13,9 +13,17 @@ export const makeService = (RefuelModel) => {
             if (!result) throw ({ code: 404, message: `Refuel id: (${_id}) not found` })
 
             return result
-        }, 
-        updateRefuel: async (_id) => {
-            const result = await RefuelModel.updateRefuel({_id});
+        },  
+        getRefuels: async (filter) => {
+            const result = await RefuelModel.getRefuels(filter);
+
+            if (!result) throw ({ code: 404, message: `Refuels not found` })
+
+            return result
+        },
+        updateRefuel: async (_id, date, fuel, amount, quantity, gasStation, location) => {
+            const pricePerLt = (amount / quantity).toFixed(3);
+            const result = await RefuelModel.updateRefuel({_id, date, fuel, amount, quantity, gasStation: {name: gasStation, location, pricePerLt}});
 
             if (!result) throw ({ code: 404, message: `Refuel id: (${_id}) not found` })
     

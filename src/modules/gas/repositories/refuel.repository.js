@@ -6,11 +6,14 @@ export const makeRepository = (RefuelModel) => {
         getRefuel: (_id) => {
             return RefuelModel.findById(_id)
         },  
-        updateRefuel: (data) => {
-            console.log(data)
+        getRefuels: (filter) => {
+            return RefuelModel.find(filter)
         }, 
-        deleteRefuel: (data) => {
-            console.log(data)
+        updateRefuel: (data) => {
+            return RefuelModel.updateOne({_id: data._id}, data)
+        }, 
+        deleteRefuel: (_id) => {
+            return RefuelModel.findByIdAndDelete(_id)
         }
     }
 }
