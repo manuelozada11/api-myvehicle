@@ -1,0 +1,1 @@
+export { makeRepository as makeUserRepository } from './user.repository.js';

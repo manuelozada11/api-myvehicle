@@ -11,10 +11,10 @@ const refuelSchema = new mongoose.Schema({
         location: { type: String },
         pricePerLt: { type: Number, required: true },
     },
-    // user: {
-    //     _id: { type: mongoose.Schema.Types.ObjectId, required: true },
-    //     fullname: { type: String, required: true }
-    // }
+    user: {
+        _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+        fullname: { type: String, required: true }
+    }
 }, { timestamps: true })
 
 export const RefuelModel = mongoose.model('Refuel', refuelSchema)
