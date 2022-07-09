@@ -1,7 +1,7 @@
 import 'dotenv/config'
-import {setupServer, startServer} from './modules/shared/server.js'
-import {makeMaintenanceModule, makeUsersModule} from './modules/index.js'
-import { varValidates } from './modules/config/validation.js'
+import { setupServer, startServer } from './modules/shared/server.js'
+import { makeMaintenanceModule, makeUsersModule, makeCarsModule } from './modules/index.js'
+import { varValidates } from './modules/shared/config/validation.js'
 import { dbConnect } from './modules/shared/database.js'
 
 try {
@@ -10,6 +10,7 @@ try {
 
     makeMaintenanceModule(server)
     makeUsersModule(server)
+    makeCarsModule(server)
     await dbConnect()
     
     startServer(server)

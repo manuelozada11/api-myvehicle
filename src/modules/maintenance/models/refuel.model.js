@@ -14,6 +14,10 @@ const refuelSchema = new mongoose.Schema({
     user: {
         _id: { type: mongoose.Schema.Types.ObjectId, required: true },
         fullname: { type: String, required: true }
+    },
+    vehicle: {
+        _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+        fullname: { type: String, required: true }
     }
 }, { timestamps: true })
 

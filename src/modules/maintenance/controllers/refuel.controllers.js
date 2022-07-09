@@ -2,11 +2,11 @@ import {refuelService} from '../services/index.js';
 
 export const createRefuel = async (req, res) => {
     try {
-        const { date, fuel, amount, quantity, gasStation, user } = req.body;
+        const { date, fuel, amount, quantity, gasStation, user, vehicle } = req.body;
 
-        if (!fuel || !amount || !quantity || !user || !user?._id || !user?.fullname) return res.status(400).json({ error: 'missing required fields' });
+        if (!fuel || !amount || !quantity || !user || !user?._id || !user?.fullname || !vehicle?._id || !vehicle?.fullname) return res.status(400).json({ error: 'missing required fields' });
 
-        await refuelService.createRefuel(date, fuel, amount, quantity, gasStation, user);
+        await refuelService.createRefuel(date, fuel, amount, quantity, gasStation, user, vehicle);
 
         res.status(200).json({ message: 'created successfully' })
     } catch (err) {

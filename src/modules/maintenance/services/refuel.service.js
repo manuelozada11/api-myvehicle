@@ -1,12 +1,12 @@
 export const makeService = (RefuelModel) => {
     return { 
-        createRefuel: async (date = new Date, fuel, amount, quantity, gasStation, user) => {
+        createRefuel: async (date = new Date, fuel, amount, quantity, gasStation, user, vehicle) => {
             const pricePerLt = (amount / quantity).toFixed(3);
 
             if (gasStation) gasStation.pricePerLt = pricePerLt;
             else gasStation = { pricePerLt };
     
-            await RefuelModel.createRefuel({date: new Date(date), fuel, amount, quantity, gasStation, user});
+            await RefuelModel.createRefuel({date: new Date(date), fuel, amount, quantity, gasStation, user, vehicle});
     
             return true
         }, 

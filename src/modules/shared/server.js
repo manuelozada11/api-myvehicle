@@ -21,7 +21,7 @@ export const setupServer = () => {
 export const startServer = (server) => {
     try {
         // open server
-        server.listen(server.get('port'), () => console.log(`Server running on port ${server.get('port')} 💥`))
+        server.listen(server.get('port'), () => console.log(`Server running on port ${server.get('port')} 💥\n`))
     } catch (err) {
         console.log(err)
         return { error: err }

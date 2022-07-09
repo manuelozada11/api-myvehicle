@@ -8,5 +8,5 @@ export const dbConnect = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true
         })
-        .then(db => console.log('DB is connected 🔐'))
+        .then(db => console.log('Mongo DB is connected 🎊'))
 }

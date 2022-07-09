@@ -1,0 +1,19 @@
+name: Say Hello
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  hello-world:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: echo msg1
+        run: echo "hello world"
+      - name: echo msg2
+        run: echo "are u ok?"
+      - name: telling today date
+        run: date
+      - name: files in folder
+        run: ls -la
