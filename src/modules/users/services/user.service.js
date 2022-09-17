@@ -1,3 +1,6 @@
+import { customError } from '../../shared/config/customError.js';
+import { getCleanUser, generateToken } from '../users.utils.js';
+
 export const makeService = (UserModel) => {
     return {
         createUser: async (name, lastname, email, password, phoneNumber) => {
@@ -5,10 +8,17 @@ export const makeService = (UserModel) => {
 
             return true;
         },
-        userSignIn: async (username, password) => {
-            const user = await UserModel.userSignIn(username, password);
+        userSignIn: async ({ usr, pwd }) => {
+            const user = await UserModel.userSignIn({ username: usr, password: pwd });
 
-            return user;
+            if (!user) throw customError("USER_NOT_FOUND", 404);
+            
+            if (!user.status) throw customError("USER_INACTIVED", 403);
+
+            const usrReduced = getCleanUser(user);
+            const token = generateToken(usrReduced);
+
+            return { info: usrReduced, token }
         },
         getUser: async (_id) => {
             const result = await UserModel.getUser({_id});

@@ -5,7 +5,7 @@ const refuelSchema = new mongoose.Schema({
     fuel: { type: Number, required: true },
     amount: { type: Number, required: true },
     quantity: { type: Number, required: true },
-    kms: { type: Number },
+    displacement: { type: Number },
     gasStation: {
         name: { type: String },
         location: { type: String },

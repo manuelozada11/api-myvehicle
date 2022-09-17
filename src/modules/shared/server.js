@@ -3,27 +3,17 @@ import cors from 'cors'
 import express from 'express'
 
 export const setupServer = () => {
-    try {
-        console.log(`setting up server...`);
-        const app = express()
-            .set('port', process.env.SERVER_PORT ?? 5001)
-            .use(cors())
-            .use(morgan('dev'))
-            .use(express.json())
-        
-        return app
-    } catch (err) {
-        console.log(err)
-        return { error: err }
-    }
+    console.log(`setting up server...`);
+    const app = express()
+        .set('port', process.env.SERVER_PORT ?? 5001)
+        .use(cors())
+        .use(morgan('dev'))
+        .use(express.json())
+    
+    return app
 }
 
 export const startServer = (server) => {
-    try {
-        // open server
-        server.listen(server.get('port'), () => console.log(`Server running on port ${server.get('port')} 💥\n`))
-    } catch (err) {
-        console.log(err)
-        return { error: err }
-    }
+    // open server
+    server.listen(server.get('port'), () => console.log(`Server running on port ${server.get('port')} 💥\n`))
 }

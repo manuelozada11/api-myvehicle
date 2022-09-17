@@ -1,1 +1,0 @@
-export { CarModel } from "./car.model.js";

@@ -1,1 +1,0 @@
-export { makeRepository as makeCarRepository } from "./car.repositories.js";

@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  app:
+    image: myvehicle
+    build:
+      context: .
+      dockerfile: ./Dockerfile.local
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: dev
+    command: 
+      - nodemon
+      - --inspect=0.0.0.0
+      - src/index.js

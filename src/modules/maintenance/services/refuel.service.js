@@ -1,3 +1,5 @@
+import { customError } from '../../shared/config/customError.js';
+
 export const makeService = (RefuelModel) => {
     return { 
         createRefuel: async (date = new Date, fuel, amount, quantity, gasStation, user, vehicle) => {
@@ -17,10 +19,10 @@ export const makeService = (RefuelModel) => {
 
             return result
         },  
-        getRefuels: async (_id) => {
-            const result = await RefuelModel.getRefuels({ "user._id": _id});
+        getRefuels: async ({ userId }) => {
+            const result = await RefuelModel.getRefuelsByUserId({ _id: userId });
 
-            if (!result) throw ({ message: `Refuels not found` })
+            if (!result) throw customError('REFUELS_NOT_FOUND', 404);
 
             return result
         },

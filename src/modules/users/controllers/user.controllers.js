@@ -1,5 +1,7 @@
 import { userService } from '../services/index.js';
-import { validatePassword, validateEmail, verifyBasicAuth } from '../../shared/utils.js';
+import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
+import { customError } from '../../shared/config/customError.js';
+import { validatePassword, validateEmail } from '../../shared/utils.js';
 
 export const createUser = async (req, res) => {
     try {
@@ -22,20 +24,22 @@ export const createUser = async (req, res) => {
 
 export const makeSignIn = async (req, res) => {
     try {
-        const result = verifyBasicAuth(req.headers.authentication);
+        const auth = req.headers.authorization;
+        if (!auth) throw customError('MISSING_AUTHORIZATION_HEADER', 400);
+        
+        if (!auth?.includes('Basic ')) throw customError('INVALID_AUTHORIZATION_HEADER', 400);
+        
+        const base64Credentials = auth.replace('Basic ','');
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    
+        if (!credentials?.includes(':')) throw customError('INVALID_AUTHORIZATION_HEADER', 400);
+    
+        const [ usr, pwd ] = credentials.split(':');
+        const user = await userService.userSignIn({ usr, pwd });
 
-        if (result.error) return res.status(400).json({ error: result.error });
-
-        const { usr, pwd } = result;
-
-        const user = await refuelService.userSignIn(usr, pwd);
-
-        if (!user) return res.status(400).json({ error: 'invalid credentials' });
-
-        res.status(200).json({ user })
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: error.message});        
+        return res.status(200).json({ code: 200, user: user.info, token: user.token });
+    } catch (e) {
+        defaultCatcher(e, res);
     }
 }
 

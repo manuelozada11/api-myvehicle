@@ -1,0 +1,1 @@
+export { makeRepository as makeVehicleRepository } from "./vehicle.repositories.js";

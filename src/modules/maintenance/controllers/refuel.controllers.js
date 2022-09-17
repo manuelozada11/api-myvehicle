@@ -1,4 +1,6 @@
-import {refuelService} from '../services/index.js';
+import { refuelService } from '../services/index.js';
+import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
+import _ from 'lodash';
 
 export const createRefuel = async (req, res) => {
     try {
@@ -32,29 +34,30 @@ export const getRefuel = async (req, res) => {
 
 export const getRefuels = async (req, res) => {
     try {
-        const { _id } = req.params;
+        const { _id } = req.user;
 
-        if (!_id) return res.status(400).json({ error: 'missing required fields' });
+        if (!_id) return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELD' });
 
-        const refuels = await refuelService.getRefuels(_id);
+        const refuels = await refuelService.getRefuels({ userId: _id });
 
-        res.status(200).json({ message: 'connection success', refuel: refuels })
+        return res.status(200).json({ code: 200, payload: refuels })
     } catch (err) {
-        console.log(err)
-        res.status(err.code).json({message: err.message})
+        defaultCatcher(e, res);
     }
 }
 
 export const updateRefuel = async (req, res) => {
     try {
-        const { _id } = req.params;
-        const { date, fuel, amount, quantity, gasStation, location } = req.body;
+        const { _id } = _.pick(req.params);
+        const { date, fuel, amount, quantity, displacement, gasStation, user, vehicle } = _.pick(req.body, ["date", "fuel", "amount", "quantity", "displacement", "gasStation", "user", "vehicle"]);
 
-        if (!_id || !fuel || !amount || !quantity) return res.status(400).json({ error: 'missing required fields' });
+        if (!_.isEmpty(_id)) return res.status(400).json({ error: 'missing required fields' });
 
-        const refuel = await refuelService.updateRefuel(_id, date, fuel, amount, quantity, gasStation, location);
+        console.log(date, fuel, amount, quantity, displacement, gasStation, user, vehicle);
+        // const refuel = await refuelService.updateRefuel(_id, date, fuel, amount, quantity, gasStation, location);
 
-        res.status(200).json({ message: 'updated successfully', refuel: refuel })
+        res.status(200).json({ message: 'updated successfully' })
+        // res.status(200).json({ message: 'updated successfully', refuel: refuel })
     } catch (err) {
         console.log(err)
         res.status(err.code).json({message: err.message})

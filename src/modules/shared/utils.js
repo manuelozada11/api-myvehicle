@@ -1,16 +1,3 @@
-export const verifyBasicAuth = (authHeader) => {
-    if (!authHeader?.includes('Basic ')) return { error: 'invalid authorization header' };
-    
-    let base64Credentials = authorization.split(' ')[1]
-    let credentials = Buffer.from(base64Credentials, 'base64').toString('ascii')
-
-    if (!credentials?.includes(':')) return { error: 'invalid authorization header' };
-
-    const [ usr, pwd ] = credentials?.split(':')
-
-    return { usr, pwd }
-}
-
 export const validatePassword = (password, confirmPwd) => {
     if (password !== confirmPwd) return { error: 'password doesn\'t match' }
     

@@ -1,4 +1,5 @@
 import express from "express";
+import { checkAuth } from '../../shared/middlewares/checkAuth.js';
 import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser } from "../controllers/user.controllers.js";
 
 const router = express.Router();
@@ -12,4 +13,4 @@ router.patch("/:_id", updateUserInfo);
 router.patch("/status/:_id", updateUserStatus);
 router.delete("/:_id", deleteUser);
 
-export {router as userRoutes};
+export { router as userRoutes };
