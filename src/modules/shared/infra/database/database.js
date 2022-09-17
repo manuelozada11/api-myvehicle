@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { defaultCatcher } from '../../config/defaultCatcher.js';
 
-const URI = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.pqm2v.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
+const URI = `${ process.env.MONGODB_URI }`
 
 export const dbConnect = async () => {
     return mongoose.connect(URI,
@@ -9,4 +10,5 @@ export const dbConnect = async () => {
             useUnifiedTopology: true
         })
         .then(db => console.log('Mongo DB is connected 🎊'))
+        .catch(e => defaultCatcher(e))
 }

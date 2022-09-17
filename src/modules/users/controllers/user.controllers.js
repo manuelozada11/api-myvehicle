@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import { userService } from '../services/index.js';
 import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
-import { customError } from '../../shared/config/customError.js';
 import { validatePassword, validateEmail } from '../../shared/utils.js';
 
 export const createUser = async (req, res) => {
@@ -25,14 +25,14 @@ export const createUser = async (req, res) => {
 export const makeSignIn = async (req, res) => {
     try {
         const auth = req.headers.authorization;
-        if (!auth) throw customError('MISSING_AUTHORIZATION_HEADER', 400);
+        if (!auth) return res.status(400).json({ code: 400, message: 'MISSING_AUTHORIZATION_HEADER' });
         
-        if (!auth?.includes('Basic ')) throw customError('INVALID_AUTHORIZATION_HEADER', 400);
+        if (!auth?.includes('Basic ')) return res.status(400).json({ code: 400, message: 'INVALID_AUTHORIZATION_HEADER' });
         
         const base64Credentials = auth.replace('Basic ','');
         const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     
-        if (!credentials?.includes(':')) throw customError('INVALID_AUTHORIZATION_HEADER', 400);
+        if (!credentials?.includes(':')) return res.status(400).json({ code: 400, message: 'INVALID_AUTHORIZATION_HEADER' });
     
         const [ usr, pwd ] = credentials.split(':');
         const user = await userService.userSignIn({ usr, pwd });
@@ -45,27 +45,37 @@ export const makeSignIn = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        const { _id } = req.params;
+        const { _idUser } = _.pick(req.params, "_idUser");
+        const { role, _id } = _.pick(req.user, "role", "_id");
+        
+        if (_.isEmpty(_idUser) && role !== 'admin') return res.status(400).json({ code: 400, message: 'MISSING_USERID_FIELD' });
 
-        if (!_id) return res.status(400).json({ error: 'missing id field' });
+        const userId = role !== 'admin' 
+            ? _idUser
+            : (_idUser ? _idUser : _id);
 
-        const user = await userService.getUser(_id);
+        const user = await userService.getUserById({ _id: userId });
+        if (!user) return res.status(404).json({ code: 404, message: 'USER_NOT_FOUND' });
 
-        return res.status(200).json({ message: 'connection success', user: user });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({message: err.message});
+        return res.status(200).json({ code: 200, message: 'USER_FOUND', payload: user });
+    } catch (e) {
+        defaultCatcher(e, res);
     }
 }
 
 export const getUsers = async (req, res) => {
     try {
+        const { role } = _.pick(req.user, "role");
+
+        if (role !== 'admin') return res.status(403).json({ code: 403, message: 'UNAUTHORIZED_USER' });
+
         const users = await userService.getUsers();
 
-        return res.status(200).json({ message: 'connection success', users: users });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({message: err.message});
+        if (!users.length) return res.status(404).json({ code: 404, message: 'USERS_NOT_FOUND' });
+
+        return res.status(200).json({ code: 200, message: 'USERS_FOUND', users: users });
+    } catch (e) {
+        defaultCatcher(e, res);
     }
 }
 

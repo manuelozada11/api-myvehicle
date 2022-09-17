@@ -5,11 +5,20 @@ import _ from 'lodash';
 
 export const createVehicle = async (req, res) => {
     try {
-        const { manufacture, model, year, displacement, user, plateNumber, type, energyType } = req.body;
+        const { 
+            manufacture, 
+            model, 
+            year, 
+            displacement, 
+            plateNumber, 
+            type, 
+            energyType 
+        } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType");
+        const { _id } = _.pick(req.user, "_id");
     
-        if (!manufacture || !model || !type || !energyType || !user?._id) return res.status(400).json({ message: 'missing required fields' });
+        if (!manufacture || !model || !type || !energyType || !_id) return res.status(400).json({ message: 'missing required fields' });
     
-        const result = await vehicleService.createVehicle(manufacture, model, year, displacement, plateNumber, user, type, energyType);
+        const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType });
         if (result.error) return res.status(500).json({ message: result.error });
         
         return res.status(200).json({ message: 'vehicle created successfully' });
@@ -21,11 +30,12 @@ export const createVehicle = async (req, res) => {
 
 export const getVehicle = async (req, res) => {
     try {
-        const { _idUser, _idVehicle } = req.params;
+        const { _idVehicle } = _.pick(req.params, '_idVehicle');
+        const { _id } = _.pick(req.user, '_id');
         
-        if (!_idVehicle || !_idUser) return res.status(400).json({ message: 'missing required fields' });
+        if (!_idVehicle || !_id) return res.status(400).json({ message: 'missing required fields' });
         
-        const vehicle = await vehicleService.getVehiclesByUser(_idUser, _idVehicle);
+        const vehicle = await vehicleService.getVehicleBydId({ _idUser: _id, _idVehicle });
         if (vehicle?.length === 0) return res.status(404).json({ message: 'vehicle not found' });
 
         return res.status(200).json({ message: 'vehicle found', payload: vehicle });

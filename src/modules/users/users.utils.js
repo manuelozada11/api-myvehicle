@@ -6,7 +6,7 @@ const getCleanUser = (user) => {
     return {
         _id: user._id,
         name: user.name,
-        last: user.lastname,
+        lastname: user.lastname,
         role: user.role,
         username: user.username
     }

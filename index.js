@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import { setupServer, startServer } from './src/modules/shared/server.js';
+import { setupServer, startServer } from './src/modules/shared/infra/http/server.js';
 import { makeMaintenanceModule, makeUsersModule, makeVehicleModule } from './src/modules/index.js';
 import { varValidates } from './src/modules/shared/config/validation.js';
-import { dbConnect } from './src/modules/shared/database.js';
+import { dbConnect } from './src/modules/shared/infra/database/database.js';
 import { defaultCatcher } from './src/modules/shared/config/defaultCatcher.js';
 
 try {

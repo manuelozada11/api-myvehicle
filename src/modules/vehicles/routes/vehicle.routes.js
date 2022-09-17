@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/', createVehicle);
 router.get('/', checkAuth, getVehicles);
-router.get('/usr=:_idUser&vehicle=:_idVehicle', getVehicle);
+router.get('/info/:_idVehicle', checkAuth, getVehicle);
 router.patch('/usr=:_idUser&vehicle=:_idVehicle', updateVehicle);
 router.delete('/:_id', deleteVehicle);
 

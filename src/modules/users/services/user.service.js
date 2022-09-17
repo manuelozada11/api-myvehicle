@@ -2,38 +2,52 @@ import { customError } from '../../shared/config/customError.js';
 import { getCleanUser, generateToken } from '../users.utils.js';
 
 export const makeService = (UserModel) => {
+    const userSignIn = async ({ usr, pwd }) => {
+        const user = await UserModel.userSignIn({ username: usr, password: pwd });
+
+        if (!user) throw customError("USER_NOT_FOUND", 404);
+        
+        if (!user.status) throw customError("USER_INACTIVED", 403);
+
+        const usrReduced = getCleanUser(user);
+        const token = generateToken(usrReduced);
+
+        return { info: usrReduced, token }
+    }
+
+    const getUserById = async ({ _id }) => {
+        const usr = await UserModel.getUserById({ _id });
+
+        if (!usr) return null
+
+        return usr
+    }
+
+    const getUsers = async (filter) => {
+        const users = await UserModel.getUsers(filter);
+
+        if (!users.length) return [];
+
+        const uResponse = users.map(user => {
+            return {
+                _id: user._id,
+                fullname: `${ user.name } ${ user.lastname }`,
+                username: user.username
+            }
+        });
+
+        return uResponse
+    }
+
     return {
         createUser: async (name, lastname, email, password, phoneNumber) => {
             await UserModel.createUser({ name, lastname, email, password, phoneNumber, role: "user", status: false });
 
             return true;
         },
-        userSignIn: async ({ usr, pwd }) => {
-            const user = await UserModel.userSignIn({ username: usr, password: pwd });
-
-            if (!user) throw customError("USER_NOT_FOUND", 404);
-            
-            if (!user.status) throw customError("USER_INACTIVED", 403);
-
-            const usrReduced = getCleanUser(user);
-            const token = generateToken(usrReduced);
-
-            return { info: usrReduced, token }
-        },
-        getUser: async (_id) => {
-            const result = await UserModel.getUser({_id});
-
-            if (!result) throw ({ message: `User id: (${_id}) not found` });
-
-            return result
-        },
-        getUsers: async (filter) => {
-            const result = await UserModel.getUsers(filter);
-
-            if (!result) throw ({ message: `Users not found` });
-
-            return result
-        },
+        userSignIn,
+        getUserById,
+        getUsers,
         updateUser: async (_id, name, lastname, email, password, phoneNumber) => {
             const result = await UserModel.updateUser({_id}, { name, lastname, phoneNumber });
 

@@ -7,8 +7,8 @@ const router = express.Router();
 router.post("/signup", createUser);
 router.post("/:_id", updateUserPassword);
 router.get('/signin', makeSignIn)
-router.get("/", getUsers);
-router.get("/:_id", getUser);
+router.get("/", checkAuth, getUsers);
+router.get("/:_idUser", checkAuth, getUser);
 router.patch("/:_id", updateUserInfo);
 router.patch("/status/:_id", updateUserStatus);
 router.delete("/:_id", deleteUser);

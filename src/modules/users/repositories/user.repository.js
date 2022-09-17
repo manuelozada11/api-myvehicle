@@ -1,7 +1,7 @@
 export const makeRepository = (UserModel) => {
     return {
         createUser: (data) => UserModel.create(data),
-        getUser: (_id) => UserModel.findById(_id),
+        getUserById: (_id) => UserModel.findById(_id),
         getUsers: (filter) => UserModel.find(filter),
         userSignIn: ({ username, password }) => UserModel.findOne({ username, password }),
         updateUser: (_id, data) => UserModel.findByIdAndUpdate(_id, data, { new: true }),

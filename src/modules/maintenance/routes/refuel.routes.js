@@ -4,8 +4,8 @@ import { createRefuel, getRefuel, getRefuels, updateRefuel, deleteRefuel } from 
 
 const router = express.Router()
 
-router.post('/', createRefuel)
-router.get('/:_id', checkAuth, getRefuel)
+router.post('/vehicle/:_idVehicle', checkAuth, createRefuel)
+router.get('/:_idRefuel', checkAuth, getRefuel)
 router.get('/vehicle/:_id', checkAuth, getRefuel)
 router.get('/', checkAuth, getRefuels)
 router.patch('/:_id', updateRefuel)
