@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const refuelSchema = new mongoose.Schema({
     date: { type: Date, required: true },
-    fuel: { type: Number, required: true },
+    fuel: { type: String, required: true },
     amount: { type: Number, required: true },
     quantity: { type: Number, required: true },
     displacement: { type: Number },

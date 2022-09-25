@@ -17,7 +17,9 @@ export const createVehicle = async (req, res) => {
         const { _id } = _.pick(req.user, "_id");
     
         if (!manufacture || !model || !type || !energyType || !_id) return res.status(400).json({ message: 'missing required fields' });
-    
+        console.log(
+            type, 
+            energyType)
         const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType });
         if (result.error) return res.status(500).json({ message: result.error });
         
@@ -49,12 +51,12 @@ export const getVehicles = async (req, res) => {
     try {
         const { _id } = _.pick(req.user, '_id');
         
-        if (!_id) return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELD' });
+        if (!_id) return res.status(400).json({ message: 'MISSING_REQUIRED_FIELD' });
         const vehicles = await vehicleService.getVehiclesByUser({ _id });
 
-        if (!vehicles.length) return res.status(404).json({ code: 404, message: 'VEHICLE_NOT_FOUND' });
+        if (!vehicles.length) return res.status(404).json({ message: 'VEHICLE_NOT_FOUND' });
 
-        return res.status(200).json({ code: 200, payload: vehicles });
+        return res.status(200).json({ payload: vehicles });
     } catch (e) {
         defaultCatcher(e, res);
     }
@@ -78,15 +80,14 @@ export const updateVehicle = async (req, res) => {
 
 export const deleteVehicle = async (req, res) => {
     try {
-        const { _id } = req.params;
-
+        const { _id } = _.pick(req.params, '_id');
+        
         if (!_id) return res.status(400).json({ message: 'missing required field' });
-        const result = await vehicleService.deleteVehicle(_id);
+        const result = await vehicleService.deleteVehicle({ _id });
         console.log(result);
 
         return res.status(200).json({ message: 'vehicle deleted successfully' });
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ message: 'internal server error' });
+        defaultCatcher(e, res);
     }
 }

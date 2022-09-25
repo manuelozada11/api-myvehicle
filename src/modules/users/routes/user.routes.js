@@ -5,12 +5,12 @@ import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserSt
 const router = express.Router();
 
 router.post("/signup", createUser);
-router.post("/:_id", updateUserPassword);
+router.post("/:_id", checkAuth, updateUserPassword);
 router.get('/signin', makeSignIn)
 router.get("/", checkAuth, getUsers);
 router.get("/:_idUser", checkAuth, getUser);
-router.patch("/:_id", updateUserInfo);
-router.patch("/status/:_id", updateUserStatus);
-router.delete("/:_id", deleteUser);
+router.patch("/:_id", checkAuth, updateUserInfo);
+router.patch("/status/:_id", checkAuth, updateUserStatus);
+router.delete("/:_id", checkAuth, deleteUser);
 
 export { router as userRoutes };

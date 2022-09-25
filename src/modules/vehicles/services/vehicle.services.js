@@ -24,6 +24,10 @@ export const makeService = (VehicleModel) => {
         return vcResponse;
     }
 
+    const deleteVehicle = async ({ _id }) => {
+        return await VehicleModel.deleteVehicle({ _id: mongoose.Types.ObjectId(_id) })
+    }
+
     return {
         createVehicle,
         getVehicleBydId,
@@ -31,8 +35,6 @@ export const makeService = (VehicleModel) => {
         updateVehicle: async (_idUser, _idVehicle, brand, model, year, km, plateNumber) => {
             return await VehicleModel.updateVehicle({ _id: mongoose.Types.ObjectId(_idVehicle), user: { _id: _idUser } }, { brand, model, year, km, plateNumber })
         },
-        deleteVehicle: async (_id) => {
-            return await VehicleModel.deleteVehicle({ _id: mongoose.Types.ObjectId(_id) })
-        }
+        deleteVehicle 
     }
 }

@@ -8,7 +8,7 @@ router.post('/vehicle/:_idVehicle', checkAuth, createRefuel)
 router.get('/:_idRefuel', checkAuth, getRefuel)
 router.get('/vehicle/:_id', checkAuth, getRefuel)
 router.get('/', checkAuth, getRefuels)
-router.patch('/:_id', updateRefuel)
-router.delete('/:_id', deleteRefuel)
+router.patch('/:_id', checkAuth, updateRefuel)
+router.delete('/:_id', checkAuth, deleteRefuel)
 
-export {router as refuelRoutes }
+export { router as refuelRoutes }

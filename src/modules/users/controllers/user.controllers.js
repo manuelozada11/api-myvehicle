@@ -1,24 +1,30 @@
 import _ from 'lodash';
 import { userService } from '../services/index.js';
 import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
-import { validatePassword, validateEmail } from '../../shared/utils.js';
+import { validatePassword, validateEmail } from '../users.utils.js';
 
 export const createUser = async (req, res) => {
     try {
-        const { name, lastname, email, password, confirmPassword, phoneNumber } = req.body;
+        const {
+            name,
+            lastname,
+            email,
+            username,
+            password,
+            confirmPassword,
+            phoneNumber
+        } = _.pick(req.body, "name", "lastname", "email", "username", "password", "confirmPassword", "phoneNumber");
 
-        if (!name || !lastname || !email || !password || !confirmPassword) return res.status(400).json({ error: 'missing required fields' });
+        if (_.isEmpty(name) || _.isEmpty(lastname) || _.isEmpty(email) || _.isEmpty(username) || _.isEmpty(password) || _.isEmpty(confirmPassword)) return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELDS' });
         
-        const result = validatePassword(password, confirmPassword)
-        const resultEmail = validateEmail(email)
-        if (result.error || resultEmail.error) return res.status(400).json({ error: result.error ?? resultEmail.error });
+        validatePassword(password, confirmPassword);
+        validateEmail(email);
 
-        await userService.createUser(name, lastname, email, password, phoneNumber);
+        await userService.createUser({ name, lastname, email, username, password, phoneNumber });
 
-        res.status(200).json({ message: 'user created successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({message: err.message});
+        return res.status(200).json({ code: 200, message: 'USER_CREATED_SUCCESSFULLY' });
+    } catch (e) {
+        defaultCatcher(e, res);
     }
 }
 

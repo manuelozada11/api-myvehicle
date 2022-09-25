@@ -2,6 +2,16 @@ import { customError } from '../../shared/config/customError.js';
 import { getCleanUser, generateToken } from '../users.utils.js';
 
 export const makeService = (UserModel) => {
+    const createUser = async (user) => {
+        await UserModel.createUser({
+            ...user,
+            role: "user", 
+            status: false
+        });
+
+        return true;
+    }
+
     const userSignIn = async ({ usr, pwd }) => {
         const user = await UserModel.userSignIn({ username: usr, password: pwd });
 
@@ -40,16 +50,12 @@ export const makeService = (UserModel) => {
     }
 
     return {
-        createUser: async (name, lastname, email, password, phoneNumber) => {
-            await UserModel.createUser({ name, lastname, email, password, phoneNumber, role: "user", status: false });
-
-            return true;
-        },
+        createUser,
         userSignIn,
         getUserById,
         getUsers,
         updateUser: async (_id, name, lastname, email, password, phoneNumber) => {
-            const result = await UserModel.updateUser({_id}, { name, lastname, phoneNumber });
+            const result = await UserModel.updateUser({ _id }, { name, lastname, phoneNumber });
 
             if (!result) throw ({ message: `User id: (${_id}) not found` });
 

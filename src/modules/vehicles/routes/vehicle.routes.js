@@ -4,10 +4,10 @@ import { createVehicle, getVehicle, getVehicles, updateVehicle, deleteVehicle } 
 
 const router = express.Router();
 
-router.post('/', createVehicle);
+router.post('/', checkAuth, createVehicle);
 router.get('/', checkAuth, getVehicles);
 router.get('/info/:_idVehicle', checkAuth, getVehicle);
-router.patch('/usr=:_idUser&vehicle=:_idVehicle', updateVehicle);
-router.delete('/:_id', deleteVehicle);
+router.patch('/usr=:_idUser&vehicle=:_idVehicle', checkAuth, updateVehicle);
+router.delete('/:_id', checkAuth, deleteVehicle);
 
 export { router as vehicleRoutes }

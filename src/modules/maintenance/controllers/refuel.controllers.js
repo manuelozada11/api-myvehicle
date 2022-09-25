@@ -15,11 +15,11 @@ export const createRefuel = async (req, res) => {
         const { _id, name, lastname } = _.pick(req.user, "_id", "name", "lastname");
         const { _idVehicle } = _.pick(req.params, "_idVehicle");
         
-        if (!_.isNumber(fuel) || !_.isNumber(amount) || !_.isNumber(quantity) || _.isEmpty(_idVehicle)) return res.status(400).json({ error: 'missing required fields' });
+        if (_.isEmpty(fuel) || !_.isNumber(amount) || !_.isNumber(quantity) || _.isEmpty(_idVehicle)) return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELDS' });
 
         const vehicleResp = await vehicleService.getVehicleBydId({ _idUser: _id, _idVehicle });
 
-        if (!vehicleResp) return res.status(400).json({ error: 'vehicle not found' });
+        if (!vehicleResp) return res.status(400).json({ code: 400, message: 'VEHICLE_NOT_FOUND' });
         
         const user = {
             _id,
@@ -28,12 +28,12 @@ export const createRefuel = async (req, res) => {
 
         const vehicle = {
             _id: _idVehicle,
-            fullname: `${ vehicle.manufacture } ${ vehicle.model }`           
+            fullname: `${ vehicleResp.manufacture } ${ vehicleResp.model }`           
         }
 
         await refuelService.createRefuel({ date, fuel, amount, quantity, gasStation, user, vehicle });
 
-        return res.status(200).json({ message: 'created successfully' })
+        return res.status(200).json({ code: 200, message: 'REFUEL_CREATED_SUCCESSFULLY' });
     } catch (e) {
         defaultCatcher(e, res)
     }
