@@ -62,9 +62,26 @@ export const getRefuels = async (req, res) => {
 
         if (!_id) return res.status(400).json({ code: 400, message: 'MISSING_USERID_FIELD' });
 
-        const refuels = await refuelService.getRefuelsByUser({ userId: _id });
+        const refuels = await refuelService.getRefuels({ userId: _id });
         
         if (!refuels.length) return res.status(400).json({ code: 404, message: 'REFUELS_NOT_FOUND' });
+
+        return res.status(200).json({ code: 200, payload: refuels })
+    } catch (e) {
+        defaultCatcher(e, res);
+    }
+}
+
+export const getRefuelsByVehicle = async (req, res) => {
+    try {
+        const { _idVehicle } = _.pick(req.params, "_idVehicle");
+        const { _id } = _.pick(req.user, "_id");
+
+        if (!_id || !_idVehicle) return res.status(400).json({ code: 400, message: 'MISSING_USERID_FIELD' });
+
+        const refuels = await refuelService.getRefuels({ userId: _id, vehicleId: _idVehicle });
+        
+        if (!refuels.length) return res.status(404).json({ code: 404, message: 'REFUELS_NOT_FOUND' });
 
         return res.status(200).json({ code: 200, payload: refuels })
     } catch (e) {
