@@ -1,5 +1,5 @@
 export const varValidates = () => {
-    ['SERVER_PORT', 'MONGODB_URI'].forEach(key => {
+    ['SERVER_PORT', 'MONGODB_URI', 'JWT_SECRET', 'JWT_ISS', 'SENTRY_DSN'].forEach(key => {
         if (!process.env[key]) {
             throw new Error(`Variable ${key} is not defined`)
         }

@@ -1,6 +1,9 @@
+import * as Sentry from '@sentry/node';
+
 export const defaultCatcher = (e, res) => {
     console.error('-------------- default catcher', JSON.stringify(e));
     console.log(e);
+    Sentry.captureException(e);
 
     if (res) {
         if (e.code === 11000) return res.status(400).json({ code: 400, message: 'DUPLICATE_ENTRY' });
