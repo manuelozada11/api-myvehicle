@@ -12,6 +12,7 @@ export const createRefuel = async (req, res) => {
             quantity,
             gasStation
         } = _.pick(req.body, "date", "fuel", "amount", "quantity", "gasStation", "vehicle");
+        
         const { _id, name, lastname } = _.pick(req.user, "_id", "name", "lastname");
         const { _idVehicle } = _.pick(req.params, "_idVehicle");
         
