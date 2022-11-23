@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     phoneNumber: { type: String, unique: true },
     role: { type: String, required: true },
     status: { type: Boolean, required: true },
+    country: { type: String }
 }, { timestamps: true })
 
 export const UserModel = mongoose.model('User', userSchema)

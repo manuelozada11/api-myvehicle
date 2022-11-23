@@ -1,13 +1,13 @@
 import express from "express";
-import { checkAuth } from "../../shared/middlewares/checkAuth.js";
-import { createVehicle, getVehicle, getVehicles, updateVehicle, deleteVehicle } from "../controllers/vehicle.controllers.js";
+import { createVehicle, getVehicle, getVehicleInfo, getVehicles, updateVehicle, deleteVehicle } from "../controllers/vehicle.controllers.js";
 
 const router = express.Router();
 
-router.post('/', checkAuth, createVehicle);
-router.get('/', checkAuth, getVehicles);
-router.get('/info/:_idVehicle', checkAuth, getVehicle);
-router.patch('/usr=:_idUser&vehicle=:_idVehicle', checkAuth, updateVehicle);
-router.delete('/:_id', checkAuth, deleteVehicle);
+router.post('/', createVehicle);
+router.get('/', getVehicles);
+router.get('/details/:_idVehicle', getVehicle);
+router.get('/info/:_idVehicle', getVehicleInfo);
+router.patch('/usr=:_idUser&vehicle=:_idVehicle', updateVehicle);
+router.delete('/:_id', deleteVehicle);
 
 export { router as vehicleRoutes }

@@ -3,13 +3,14 @@ import { customError } from '../shared/config/customError.js';
 
 const getCleanUser = (user) => {
     if (!user) return null;
-
+    
     return {
         _id: user._id,
         name: user.name,
         lastname: user.lastname,
         role: user.role,
-        username: user.username
+        username: user.username,
+        country: user.country
     }
 }
 

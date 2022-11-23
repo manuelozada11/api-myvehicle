@@ -37,7 +37,24 @@ export const getVehicle = async (req, res) => {
         
         if (!_idVehicle || !_id) return res.status(400).json({ message: 'missing required fields' });
         
-        const vehicle = await vehicleService.getVehicleBydId({ _idUser: _id, _idVehicle });
+        const vehicle = await vehicleService.getVehicleById({ _idUser: _id, _idVehicle });
+        if (vehicle?.length === 0) return res.status(404).json({ message: 'vehicle not found' });
+
+        return res.status(200).json({ message: 'vehicle found', payload: vehicle });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'internal server error' });
+    }
+}
+
+export const getVehicleInfo = async (req, res) => {
+    try {
+        const { _idVehicle } = _.pick(req.params, '_idVehicle');
+        const { _id } = _.pick(req.user, '_id');
+        
+        if (!_idVehicle || !_id) return res.status(400).json({ message: 'missing required fields' });
+        
+        const vehicle = await vehicleService.getVehicleInfoById({ _idUser: _id, _idVehicle });
         if (vehicle?.length === 0) return res.status(404).json({ message: 'vehicle not found' });
 
         return res.status(200).json({ message: 'vehicle found', payload: vehicle });

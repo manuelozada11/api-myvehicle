@@ -18,8 +18,11 @@ export const makeService = (RefuelModel) => {
 
     const getRefuels = async ({ userId, vehicleId }) => {
         let refuels = [];
+        const thisMonth = new Date();
+        thisMonth.setDate(1);
+        thisMonth.setHours(0,0,0);
         
-        if (vehicleId) refuels = await RefuelModel.getRefuels({ "user._id": userId, "vehicle._id": vehicleId });
+        if (vehicleId) refuels = await RefuelModel.getRefuels({ "user._id": userId, "vehicle._id": vehicleId, "date": { "$gte": new Date(thisMonth) } });
         else refuels = await RefuelModel.getRefuels({ "user._id": userId });
 
         if (!refuels) return [];

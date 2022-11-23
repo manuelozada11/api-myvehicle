@@ -3,7 +3,15 @@ import mongoose from "mongoose";
 export const makeService = (VehicleModel) => {
     const createVehicle = async (data) => await VehicleModel.createVehicle(data);
 
-    const getVehicleBydId = async ({ _idUser, _idVehicle }) => {
+    const getVehicleById = async ({ _idUser, _idVehicle }) => {
+        const allData = await VehicleModel.getVehicleById({ _id: mongoose.Types.ObjectId(_idVehicle), "user._id": mongoose.Types.ObjectId(_idUser) });
+
+        // reduce to main details
+        
+        return allData;
+    }
+
+    const getVehicleInfoById = async ({ _idUser, _idVehicle }) => {
         return await VehicleModel.getVehicleById({ _id: mongoose.Types.ObjectId(_idVehicle), "user._id": mongoose.Types.ObjectId(_idUser) })
     }
 
@@ -30,7 +38,8 @@ export const makeService = (VehicleModel) => {
 
     return {
         createVehicle,
-        getVehicleBydId,
+        getVehicleById,
+        getVehicleInfoById,
         getVehiclesByUser,
         updateVehicle: async (_idUser, _idVehicle, brand, model, year, km, plateNumber) => {
             return await VehicleModel.updateVehicle({ _id: mongoose.Types.ObjectId(_idVehicle), user: { _id: _idUser } }, { brand, model, year, km, plateNumber })
