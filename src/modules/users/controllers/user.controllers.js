@@ -41,9 +41,15 @@ export const makeSignIn = async (req, res) => {
         if (!credentials?.includes(':')) return res.status(400).json({ code: 400, message: 'INVALID_AUTHORIZATION_HEADER' });
     
         const [ usr, pwd ] = credentials.split(':');
-        const user = await userService.userSignIn({ usr, pwd });
 
-        return res.status(200).json({ code: 200, user: user.info, token: user.token });
+        const { code, message, info, token } = await userService.userSignIn({ usr, pwd });
+        if (code > 200) return res.status(code).json({ code, message });
+
+        return res.status(200).json({ 
+            code: 200, 
+            user: info, 
+            token
+        });
     } catch (e) {
         defaultCatcher(e, res);
     }
