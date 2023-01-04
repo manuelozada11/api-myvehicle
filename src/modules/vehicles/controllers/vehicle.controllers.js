@@ -17,9 +17,7 @@ export const createVehicle = async (req, res) => {
         const { _id } = _.pick(req.user, "_id");
     
         if (!manufacture || !model || !type || !energyType || !_id) return res.status(400).json({ message: 'missing required fields' });
-        console.log(
-            type, 
-            energyType)
+
         const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType });
         if (result.error) return res.status(500).json({ message: result.error });
         
@@ -81,14 +79,20 @@ export const getVehicles = async (req, res) => {
 
 export const updateVehicle = async (req, res) => {
     try {
-        const { _idUser, _idVehicle } = req.params;
-        const { brand, model, year, km, plateNumber } = req.body;
+        const { _vehicleId } = _.pick(req.params, "_vehicleId");
+        const { _id: _userId } = _.pick(req.user, "_id");
+        const fields = _.pick(req.body, 
+            "bodySerial", "boughtDate", "color",
+            "displacement", "energyType", "insuranceDate",
+            "manufacture", "model", "passengers",
+            "plateNumber", "taxesDate", "vehicleType", "year");
 
-        if (!_idUser || !_idVehicle) return res.status(400).json({ message: 'missing required field' });
-        const vehicle = await vehicleService.updateVehicle(_idUser, _idVehicle, brand, model, year, km, plateNumber);
+        if (_.isEmpty(_userId) || _.isEmpty(_vehicleId)) return res.status(400).json({ message: 'missing required fields' });
+
+        const vehicle = await vehicleService.updateVehicle({ _userId, _vehicleId, ...fields });
         console.log(vehicle);
 
-        return res.status(200).json({ message: 'vehicles updated succesfully', payload: vehicle });
+        return res.status(200).json({ message: 'vehicle updated succesfully', vehicle });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: 'internal server error' });

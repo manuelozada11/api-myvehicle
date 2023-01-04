@@ -36,14 +36,16 @@ export const makeService = (VehicleModel) => {
         return await VehicleModel.deleteVehicle({ _id: mongoose.Types.ObjectId(_id) })
     }
 
+    const updateVehicle = async (data) => {
+        return await VehicleModel.updateVehicle(data);
+    }
+
     return {
         createVehicle,
         getVehicleById,
         getVehicleInfoById,
         getVehiclesByUser,
-        updateVehicle: async (_idUser, _idVehicle, brand, model, year, km, plateNumber) => {
-            return await VehicleModel.updateVehicle({ _id: mongoose.Types.ObjectId(_idVehicle), user: { _id: _idUser } }, { brand, model, year, km, plateNumber })
-        },
+        updateVehicle,
         deleteVehicle 
     }
 }

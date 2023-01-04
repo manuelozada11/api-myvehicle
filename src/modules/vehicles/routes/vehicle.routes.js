@@ -7,7 +7,7 @@ router.post('/', createVehicle);
 router.get('/', getVehicles);
 router.get('/details/:_idVehicle', getVehicle);
 router.get('/info/:_idVehicle', getVehicleInfo);
-router.patch('/usr=:_idUser&vehicle=:_idVehicle', updateVehicle);
+router.patch('/:_vehicleId', updateVehicle);
 router.delete('/:_id', deleteVehicle);
 
 export { router as vehicleRoutes }
