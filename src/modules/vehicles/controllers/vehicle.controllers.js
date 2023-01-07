@@ -1,6 +1,5 @@
 import { vehicleService } from "../services/index.js";
 import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
-import { customError } from '../../shared/config/customError.js';
 import _ from 'lodash';
 
 export const createVehicle = async (req, res) => {
@@ -90,7 +89,6 @@ export const updateVehicle = async (req, res) => {
         if (_.isEmpty(_userId) || _.isEmpty(_vehicleId)) return res.status(400).json({ message: 'missing required fields' });
 
         const vehicle = await vehicleService.updateVehicle({ _userId, _vehicleId, ...fields });
-        console.log(vehicle);
 
         return res.status(200).json({ message: 'vehicle updated succesfully', vehicle });
     } catch (err) {

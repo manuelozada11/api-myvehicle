@@ -6,19 +6,20 @@ import { vehicleService } from '../../vehicles/services/index.js';
 export const createRefuel = async (req, res) => {
     try {
         const {
-            date,
-            fuel,
             amount,
             quantity,
-            gasStation
-        } = _.pick(req.body, "date", "fuel", "amount", "quantity", "gasStation", "vehicle");
+            ...fields
+        } = _.pick(req.body, 
+            "date", "fuel", "amount", "quantity", "gasStation", 
+            "vehicle", "displacement");
         
         const { _id, name, lastname } = _.pick(req.user, "_id", "name", "lastname");
         const { _idVehicle } = _.pick(req.params, "_idVehicle");
         
-        if (_.isEmpty(fuel) || !_.isNumber(amount) || !_.isNumber(quantity) || _.isEmpty(_idVehicle)) return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELDS' });
+        if (!_.isNumber(amount) || !_.isNumber(quantity) || _.isEmpty(_idVehicle)) 
+            return res.status(400).json({ code: 400, message: 'MISSING_REQUIRED_FIELDS' });
 
-        const vehicleResp = await vehicleService.getVehicleBydId({ _idUser: _id, _idVehicle });
+        const vehicleResp = await vehicleService.getVehicleById({ _idUser: _id, _idVehicle });
 
         if (!vehicleResp) return res.status(400).json({ code: 400, message: 'VEHICLE_NOT_FOUND' });
         
@@ -32,7 +33,7 @@ export const createRefuel = async (req, res) => {
             fullname: `${ vehicleResp.manufacture } ${ vehicleResp.model }`           
         }
 
-        await refuelService.createRefuel({ date, fuel, amount, quantity, gasStation, user, vehicle });
+        await refuelService.createRefuel({ fuel: vehicleResp.energyType, amount, quantity, user, vehicle, ...fields });
 
         return res.status(200).json({ code: 200, message: 'REFUEL_CREATED_SUCCESSFULLY' });
     } catch (e) {
