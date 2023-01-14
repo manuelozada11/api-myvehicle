@@ -1,14 +1,13 @@
-import express from 'express';
-import { checkAuth } from "../../shared/middlewares/checkAuth.js";
+import { Router } from 'express';
 import { createRefuel, getRefuel, getRefuels, updateRefuel, deleteRefuel, getRefuelsByVehicle } from '../controllers/refuel.controllers.js';
 
-const router = express.Router()
+const router = Router();
 
-router.post('/:_idVehicle', checkAuth, createRefuel)
-router.get('/:_idRefuel', checkAuth, getRefuel)
-router.get('/vehicle/:_idVehicle', checkAuth, getRefuelsByVehicle)
-router.get('/', checkAuth, getRefuels)
-router.patch('/:_id', checkAuth, updateRefuel)
-router.delete('/:_id', checkAuth, deleteRefuel)
+router.post('/:_idVehicle', createRefuel);
+router.get('/:_idRefuel', getRefuel);
+router.get('/vehicle/:_idVehicle', getRefuelsByVehicle);
+router.get('/', getRefuels);
+router.patch('/:_id', updateRefuel);
+router.delete('/:_id', deleteRefuel);
 
-export { router as refuelRoutes }
+export { router as refuelRoutes };
