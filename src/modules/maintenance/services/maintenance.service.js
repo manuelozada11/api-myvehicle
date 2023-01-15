@@ -33,8 +33,8 @@ export const makeService = (MaintenanceModel) => {
         thisYear.setDate(1);
         thisYear.setHours(0,0,0);
 
-        const quantiy = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "createdAt": { "$gte": new Date(thisYear) } });
-        response.quantiy = quantiy.length;
+        const quantity = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "createdAt": { "$gte": new Date(thisYear) } });
+        response.quantity = quantity.length;
         
         const battery = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "type": "battery" });
         if (battery.length > 0) response.batteryDate = battery[0].createdAt;
