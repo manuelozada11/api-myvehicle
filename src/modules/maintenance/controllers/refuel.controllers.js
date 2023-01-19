@@ -5,11 +5,7 @@ import { vehicleService } from '../../vehicles/services/index.js';
 
 export const createRefuel = async (req, res) => {
     try {
-        const {
-            amount,
-            quantity,
-            ...fields
-        } = _.pick(req.body, 
+        const { amount, quantity, ...fields } = _.pick(req.body, 
             "date", "fuel", "amount", "quantity", "gasStation", 
             "vehicle", "displacement");
         
