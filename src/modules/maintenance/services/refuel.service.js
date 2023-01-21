@@ -1,9 +1,19 @@
+import { vehicleService } from "../../vehicles/services/index.js";
+
 export const makeService = (RefuelModel) => {
     const createRefuel = async ({ date = new Date, amount, quantity, gasStation, ...data }) => {
         const pricePerLt = (amount / quantity).toFixed(3);
 
         if (gasStation) gasStation.pricePerLt = pricePerLt;
         else gasStation = { pricePerLt };
+        
+        if (data?.displacement) {
+            vehicleService.updateVehicle({
+                _userId: data.user._id, 
+                _vehicleId: data.vehicle._id, 
+                displacement: data.displacement
+            });
+        }
 
         await RefuelModel.createRefuel({date: new Date(date), amount, quantity, gasStation, ...data});
     }

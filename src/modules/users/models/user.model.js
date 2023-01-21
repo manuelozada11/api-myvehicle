@@ -9,7 +9,12 @@ const userSchema = new mongoose.Schema({
     phoneNumber: { type: String, unique: true },
     role: { type: String, required: true },
     status: { type: Boolean, required: true },
-    country: { type: String }
+    country: { type: String },
+    notifications: [ {
+        _id: { type: mongoose.Types.ObjectId, required: true },
+        message: { type: String, required: true },
+        priority: { type: Boolean }
+    } ]
 }, { timestamps: true })
 
 export const UserModel = mongoose.model('User', userSchema)

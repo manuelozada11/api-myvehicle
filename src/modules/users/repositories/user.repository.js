@@ -5,6 +5,7 @@ export const makeRepository = (UserModel) => {
         getUsers: (filter) => UserModel.find(filter),
         userSignIn: ({ username, password }) => UserModel.findOne({ username, password }),
         updateUser: (_id, data) => UserModel.findByIdAndUpdate(_id, data, { new: true }),
-        deleteUser: (_id) => UserModel.findByIdAndDelete(_id)
+        deleteUser: (_id) => UserModel.findByIdAndDelete(_id),
+        addNotification: (_id, filter) => UserModel.updateOne(_id, filter)
     }
 }
