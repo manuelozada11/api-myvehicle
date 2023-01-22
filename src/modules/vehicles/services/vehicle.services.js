@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 export const makeService = (VehicleModel) => {
@@ -40,12 +41,44 @@ export const makeService = (VehicleModel) => {
         return await VehicleModel.updateVehicle(data);
     }
 
+    const transferVehicle = async (data) => {
+        const { lastOwner, _userId, _vehicleId } = data;
+
+        const jwtResult = await jwt.verify(lastOwner, process.env.JWT_SECRET, async (err, user) => {
+            if (err) return { message: 'invalid user' };
+    
+            if (user.iss === process.env.JWT_ISS) return { message: "valid user", user };
+            else return { message: 'invalid user' };
+        });
+
+        if (jwtResult.message === 'invalid user') return { code: 401, message: 'invalid user' };
+
+        const vehicle = await getVehicleInfoById({ _idUser: jwtResult.user._id, _idVehicle: _vehicleId });
+
+        if (!vehicle) return { code: 404, message: 'vehicle not found' };
+        if (!vehicle.isTransferActivated) return { code: 203, message: 'vehicle transferation isnt activated' };
+
+        const fields = {
+            _userId: jwtResult.user._id,
+            _vehicleId,
+            user: { _id: _userId },
+            "$push": { lastOwners: { _id: jwtResult.user._id, fullname: `${jwtResult.user.name} ${jwtResult.user.lastname}` } },
+            isTransferActivated: false
+        }
+        const updateResult = await updateVehicle(fields);
+
+        if (!updateResult) return { code: 500, message: 'vehicle cant be transfered' };
+
+        return { code: 200, message: 'vehicle transfered succesfully' };
+    }
+
     return {
         createVehicle,
         getVehicleById,
         getVehicleInfoById,
         getVehiclesByUser,
         updateVehicle,
-        deleteVehicle 
+        deleteVehicle,
+        transferVehicle
     }
 }

@@ -97,6 +97,42 @@ export const updateVehicle = async (req, res) => {
     }
 }
 
+export const authorizateTransfer = async (req, res) => {
+    try {
+        const { _vehicleId } = _.pick(req.params, "_vehicleId");
+        const { _id: _userId } = _.pick(req.user, "_id");
+
+        if (_.isEmpty(_userId) || _.isEmpty(_vehicleId)) return res.status(400).json({ message: 'missing required fields' });
+
+        await vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: true });
+        setTimeout(() => {
+             vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: false });
+        }, 30000);
+
+        return res.status(200).json({ message: 'transfer activated succesfully' });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'internal server error' });
+    }
+}
+
+export const transferVehicle = async (req, res) => {
+    try {
+        const { _vehicleId } = _.pick(req.params, "_vehicleId");
+        const { _id: _userId } = _.pick(req.user, "_id");
+        const { lastOwner } = _.pick(req.body, "lastOwner");
+
+        if (_.isEmpty(_userId) || _.isEmpty(_vehicleId) || _.isEmpty(lastOwner)) return res.status(400).json({ message: 'missing required fields' });
+
+        const result = await vehicleService.transferVehicle({ _userId, _vehicleId, lastOwner });
+
+        return res.status(result.code).json({ message: result.message });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'internal server error' });
+    }
+}
+
 export const deleteVehicle = async (req, res) => {
     try {
         const { _id } = _.pick(req.params, '_id');

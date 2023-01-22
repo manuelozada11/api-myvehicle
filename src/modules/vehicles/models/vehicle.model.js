@@ -12,13 +12,18 @@ const vehicleSchema = new mongoose.Schema({
     user: {
         _id: { type: mongoose.Types.ObjectId, required: true },
     },
+    lastOwners: [{
+        _id: { type: mongoose.Types.ObjectId, required: true },
+        fullname: { type: String, required: true }
+    }],
     boughtDate: { type: Date },
     color: { type: String },
     passengers: { type: Number },
     vehicleType: { type: String, enum: ['motorcycle', 'car', 'truck', 'bus'] },
     bodySerial: { type: String },
     insuranceDate: { type: Date },
-    taxesDate: { type: Date }
+    taxesDate: { type: Date },
+    isTransferActivated: { type: Boolean }
 }, { timestamps: true });
 
 export const VehicleModel = mongoose.model('Vehicle', vehicleSchema);
