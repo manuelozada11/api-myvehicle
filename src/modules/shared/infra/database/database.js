@@ -4,6 +4,7 @@ import { defaultCatcher } from '../../config/defaultCatcher.js';
 const URI = `${ process.env.MONGODB_URI }`
 
 export const dbConnect = async () => {
+    mongoose.set('strictQuery', true);
     return mongoose.connect(URI,
         {
             useNewUrlParser: true,
