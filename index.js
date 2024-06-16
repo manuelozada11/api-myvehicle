@@ -1,9 +1,9 @@
 import 'dotenv/config'
-import { setupServer, startServer } from './src/modules/shared/infra/http/server.js';
+import { setupServer, startServer } from './src/shared/infra/http/server.js';
 import { makeMaintenanceModule, makeUsersModule, makeVehicleModule } from './src/modules/index.js';
-import { varValidates } from './src/modules/shared/config/validation.js';
-import { dbConnect } from './src/modules/shared/infra/database/database.js';
-import { defaultCatcher } from './src/modules/shared/config/defaultCatcher.js';
+import { varValidates } from './src/shared/config/validation.js';
+import { dbConnect } from './src/shared/infra/database/database.js';
+import { defaultCatcher } from './src/shared/config/defaultCatcher.js';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 

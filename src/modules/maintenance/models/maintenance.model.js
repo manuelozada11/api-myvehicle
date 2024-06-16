@@ -1,16 +1,13 @@
 import mongoose from "mongoose";
 
 const maintenanceSchema = new mongoose.Schema({
-    type: { type: String, enum: [ "tires", "battery", "normal" ], required: true },
-    description: { type: String, required: true },
+    type: { type: String, enum: [ "tires", "battery", "general" ], required: true },
+    description: { type: String },
+    private: { type: Boolean, default: true },
+    adjustments: { type: Array, default: []},
     amount: { type: Number },
-    private: { type: Boolean, default: false },
-    tires: {
-        brand: { type: String }
-    },
-    battery: {
-        brand: { type: String }
-    },
+    kms: { type: Number },
+    date: { type: Date, required: true },
     user: {
         _id: { type: mongoose.Schema.Types.ObjectId, required: true },
         fullname: { type: String, required: true }

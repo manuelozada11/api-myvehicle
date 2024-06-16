@@ -1,5 +1,5 @@
 import express from "express";
-import { checkAuth } from '../../shared/middlewares/checkAuth.js';
+import { checkAuth } from '../../../shared/middlewares/checkAuth.js';
 import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser } from "../controllers/user.controllers.js";
 
 const router = express.Router();

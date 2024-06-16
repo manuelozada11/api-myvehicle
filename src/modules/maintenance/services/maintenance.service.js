@@ -7,15 +7,8 @@ export const makeService = (MaintenanceModel) => {
 
         if (!vehicleResp) return { result: 404, response: 'vehicle not found' };
         
-        const newUser = {
-            _id,
-            fullname: `${ name } ${ lastname }`
-        };
-
-        const vehicle = {
-            _id: vehicleId,
-            fullname: `${ vehicleResp.manufacture } ${ vehicleResp.model }`           
-        };
+        const newUser = { _id, fullname: `${ name } ${ lastname }` };
+        const vehicle = { _id: vehicleId, fullname: `${ vehicleResp.manufacture } ${ vehicleResp.model }` };
 
         await MaintenanceModel.create({ user: newUser, vehicle, ...fields });
         return { result: 200, response: 'maintenance created successfully' };
@@ -23,7 +16,12 @@ export const makeService = (MaintenanceModel) => {
     
     const getMaintenanceById = ({ maintenanceId }) => {}
     
-    const getAllMaintenancesById = ({ vehicleId, userId }) => {}
+    const getAllMaintenancesById = async ({ vehicleId, user, qty }) => {
+        const result = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": user._id }, { "createdAt": -1 }, qty);
+        
+        if (result.length === 0) return { result: 404, response: "no maintenances found", payload: null };
+        return { result: 200, response: "maintenances found", payload: result };
+    }
     
     const getStatsByVehicle = async ({ vehicleId }) => {
         let response = {};

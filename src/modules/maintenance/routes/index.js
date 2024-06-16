@@ -1,4 +1,4 @@
-import { checkAuth } from "../../shared/middlewares/checkAuth.js";
+import { checkAuth } from "../../../shared/middlewares/checkAuth.js";
 import { maintenanceRoutes } from "./maintenance.routes.js";
 import { refuelRoutes } from './refuel.routes.js'
 

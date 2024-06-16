@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { userService } from '../services/index.js';
-import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
+import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
 import { validatePassword, validateEmail } from '../users.utils.js';
 
 export const createUser = async (req, res) => {

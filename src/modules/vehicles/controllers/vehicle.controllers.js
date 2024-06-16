@@ -1,5 +1,5 @@
 import { vehicleService } from "../services/index.js";
-import { defaultCatcher } from '../../shared/config/defaultCatcher.js';
+import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
 import _ from 'lodash';
 
 export const createVehicle = async (req, res) => {

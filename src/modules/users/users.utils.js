@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { customError } from '../shared/config/customError.js';
+import { customError } from '../../shared/config/customError.js';
 
 const getCleanUser = (user) => {
     if (!user) return null;
