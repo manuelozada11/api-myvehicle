@@ -24,10 +24,11 @@ export const createMaintenance = async (req, res) => {
 export const getStatsByVehicle = async (req, res) => {
   try {
     const { vehicleId } = _.pick(req.params, "vehicleId");
+    const user = _.pick(req.user, "_id");
 
     if (!vehicleId) return res.status(400).json({ code: 400, message: "missing vehicleId field" });
 
-    const { result, response, stats } = await maintenanceService.getStatsByVehicle({ vehicleId });
+    const { result, response, stats } = await maintenanceService.getStatsByVehicle({ vehicleId, userId: user._id});
 
     return res.status(result).json({ code: result, message: response, stats });
   } catch (e) {

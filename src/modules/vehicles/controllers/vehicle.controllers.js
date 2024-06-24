@@ -11,13 +11,14 @@ export const createVehicle = async (req, res) => {
             displacement, 
             plateNumber, 
             type, 
-            energyType 
-        } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType");
+            energyType,
+            vehicleType
+        } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType", "vehicleType");
         const { _id } = _.pick(req.user, "_id");
     
-        if (!manufacture || !model || !type || !energyType || !_id) return res.status(400).json({ message: 'missing required fields' });
+        if (!manufacture || !model || !_id) return res.status(400).json({ message: 'missing required fields' });
 
-        const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType });
+        const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType, vehicleType });
         if (result.error) return res.status(500).json({ message: result.error });
         
         return res.status(200).json({ message: 'vehicle created successfully' });

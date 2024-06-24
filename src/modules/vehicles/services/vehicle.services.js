@@ -22,11 +22,14 @@ export const makeService = (VehicleModel) => {
         if (!vehicles.length) return [];
 
         const vcResponse = vehicles.map(vehicle => {
+            const fullname = `${ vehicle.manufacture } ${ vehicle.model }`;
             return {
                 _id: vehicle._id,
                 user: vehicle.user,
-                fullname: `${ vehicle.manufacture } ${ vehicle.model }`,
-                plateNumber: vehicle.plateNumber
+                fullname: vehicle.vehicleType === 'bicycle' ? vehicle.manufacture : fullname,
+                plateNumber: vehicle.plateNumber,
+                model: vehicle.vehicleType === 'bicycle' ? vehicle.model : undefined,
+                vehicleType: vehicle.vehicleType,
             }
         });
 
