@@ -51,3 +51,19 @@ export const getMaintenances = async (req, res) => {
     defaultCatcher(e, res)
   }
 }
+
+export const getMaintenanceById = async (req, res) => {
+  try {
+    const user = _.pick(req.user, "_id", "name", "lastname");
+    const { vehicleId, maintenanceId } = _.pick(req.params, "vehicleId", "maintenanceId");
+
+    if (!vehicleId) return res.status(400).json({ code: 400, message: "missing vehicleId field" });
+    if (!maintenanceId) return res.status(400).json({ code: 400, message: "missing maintenanceId field" });
+
+    const { result, response, payload } = await maintenanceService.getMaintenanceById({ vehicleId, user, maintenanceId });
+    if (result > 200) return res.status(result).json({ code: result, message: response });
+    return res.status(result).json({ code: result, message: response, payload });
+  } catch (e) {
+    defaultCatcher(e, res)
+  }
+}

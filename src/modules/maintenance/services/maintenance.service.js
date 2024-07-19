@@ -22,7 +22,12 @@ export const makeService = (MaintenanceModel) => {
     return { result: 200, response: 'maintenance created successfully' };
   }
 
-  const getMaintenanceById = ({ maintenanceId }) => { }
+  const getMaintenanceById = async ({ user, vehicleId, maintenanceId }) => {
+    const maintenance = await MaintenanceModel.getMaintenances({ "user._id": user._id, "vehicle._id": vehicleId, _id: maintenanceId });
+    if (!maintenance) return { result: 404, response: 'maintenance not found', payload: null };
+
+    return { result: 200, response: "maintenance found", payload: maintenance}
+  }
 
   const getAllMaintenancesById = async ({ vehicleId, user, qty }) => {
     const result = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": user._id }, { "createdAt": -1 }, qty);
