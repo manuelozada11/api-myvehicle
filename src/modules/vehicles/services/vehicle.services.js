@@ -2,7 +2,9 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 export const makeService = (VehicleModel) => {
-    const createVehicle = async (data) => await VehicleModel.createVehicle(data);
+    const createVehicle = async (data) => {
+        return await VehicleModel.createVehicle(data)
+    };
 
     const getVehicleById = async ({ _idUser, _idVehicle }) => {
         const allData = await VehicleModel.getVehicleById({ _id: mongoose.Types.ObjectId(_idVehicle), "user._id": mongoose.Types.ObjectId(_idUser) });
@@ -37,6 +39,9 @@ export const makeService = (VehicleModel) => {
     }
 
     const deleteVehicle = async ({ _id }) => {
+        // remove refuelings
+        // remove maintenances 
+        // remove vehicle
         return await VehicleModel.deleteVehicle({ _id: mongoose.Types.ObjectId(_id) })
     }
 
