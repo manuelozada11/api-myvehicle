@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { validateCreateFields } from "../maintenance.utils.js";
 import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
-import { maintenanceService } from '../../maintenance/services/index.js';
+import { maintenanceService } from '../../maintenance/services/maintenance.service.js';
 
 export const createMaintenance = async (req, res) => {
   try {

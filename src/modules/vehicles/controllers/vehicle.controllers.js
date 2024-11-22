@@ -139,11 +139,11 @@ export const deleteVehicle = async (req, res) => {
         const { _id } = _.pick(req.params, '_id');
         
         if (!_id) return res.status(400).json({ message: 'missing required field' });
-        const result = await vehicleService.deleteVehicle({ _id });
+        const result = await vehicleService.deleteVehicle({ user: req.user, _id });
         console.log(result);
 
         return res.status(200).json({ message: 'vehicle deleted successfully' });
     } catch (err) {
-        defaultCatcher(e, res);
+        defaultCatcher(err, res);
     }
 }

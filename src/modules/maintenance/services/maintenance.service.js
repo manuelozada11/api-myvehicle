@@ -1,4 +1,6 @@
 import { vehicleService } from '../../vehicles/services/index.js';
+import { MaintenanceModel } from '../models/index.js'
+import { makeMaintenanceRepository } from '../repositories/index.js'
 
 export const makeService = (MaintenanceModel) => {
   const createMaintenance = async ({ vehicleId, user, ...fields }) => {
@@ -80,10 +82,21 @@ export const makeService = (MaintenanceModel) => {
     };
   }
 
+  const deleteMaintenance = async (filter) => {
+    const maintenance = await MaintenanceModel.getMaintenances({ "vehicle._id": filter?.vehicleId, "user._id": filter?.userId });
+    if (!maintenance) return { result: 404, response: 'maintenance not found' };
+
+    await MaintenanceModel.deleteBy({ "vehicle._id": filter?.vehicleId, "user._id": filter?.userId });
+    return { result: 200, response: 'maintenance deleted successfully' };
+  }
+
   return {
     createMaintenance,
     getMaintenanceById,
     getAllMaintenancesById,
     getStatsByVehicle,
+    deleteMaintenance
   }
 }
+
+export const maintenanceService = makeService({...makeMaintenanceRepository(MaintenanceModel)});
