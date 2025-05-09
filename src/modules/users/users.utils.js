@@ -10,7 +10,8 @@ const getCleanUser = (user) => {
     lastname: user.lastname,
     role: user.role,
     username: user.username,
-    country: user.country
+    country: user.country,
+    email: user.email,
   }
 }
 
