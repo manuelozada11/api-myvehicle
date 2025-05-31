@@ -82,11 +82,10 @@ export const makeService = (MaintenanceModel) => {
     };
   }
 
-  const deleteMaintenance = async (filter) => {
-    const maintenance = await MaintenanceModel.getMaintenances({ "vehicle._id": filter?.vehicleId, "user._id": filter?.userId });
+  const deleteMaintenanceById = async (maintenanceId) => {
+    const maintenance = await MaintenanceModel.deleteById(maintenanceId);
     if (!maintenance) return { result: 404, response: 'maintenance not found' };
 
-    await MaintenanceModel.deleteBy({ "vehicle._id": filter?.vehicleId, "user._id": filter?.userId });
     return { result: 200, response: 'maintenance deleted successfully' };
   }
 
@@ -95,7 +94,7 @@ export const makeService = (MaintenanceModel) => {
     getMaintenanceById,
     getAllMaintenancesById,
     getStatsByVehicle,
-    deleteMaintenance
+    deleteMaintenanceById
   }
 }
 

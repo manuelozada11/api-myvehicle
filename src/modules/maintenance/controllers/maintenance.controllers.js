@@ -67,3 +67,19 @@ export const getMaintenanceById = async (req, res) => {
     defaultCatcher(e, res)
   }
 }
+
+export const deleteMaintenanceById = async (req, res) => {
+  try {
+    const user = _.pick(req.user, "_id", "name", "lastname", "role");
+    const { maintenanceId } = _.pick(req.params, "maintenanceId");
+    
+    if (user?.role !== 'admin') return res.status(403).json({ code: 403, message: "You don't have permission to delete this maintenance" });
+    if (!maintenanceId) return res.status(400).json({ code: 400, message: "missing maintenanceId field" });
+
+    const { result, response } = await maintenanceService.deleteMaintenanceById(maintenanceId);
+    if (result > 200) return res.status(result).json({ code: result, message: response });
+    return res.status(result).json({ code: result, message: response });
+  } catch (e) {
+    defaultCatcher(e, res)
+  }
+}

@@ -9,7 +9,7 @@ export const makeRepository = (MaintenanceModel) => {
 
     const updateById = () => {}
     
-    const deleteBy = (filter) => MaintenanceModel.deleteMany(filter);
+    const deleteById = (maintenanceId) => MaintenanceModel.findByIdAndDelete(maintenanceId);
 
     return {
         create,
@@ -17,6 +17,6 @@ export const makeRepository = (MaintenanceModel) => {
         getMaintenances,
         getMaintenancesLimit,
         updateById,
-        deleteBy
+        deleteById
     }
 }
