@@ -17,7 +17,7 @@ const getCleanUser = (user) => {
 
 const generateToken = (usr) => {
   const user = { ...usr, iss: process.env.JWT_ISS }
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '30d' });
 }
 
 const regexValidation = (string, type, regex) => {

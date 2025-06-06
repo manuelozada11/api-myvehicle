@@ -168,3 +168,21 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 }
+
+export const createRateApp = async (req, res) => {
+  try {
+    const fields = _.pick(req.body, "rating", "review");
+    const { _id } = _.pick(req.params, "_id");
+
+    if (_.isEmpty(_id)) return res.status(400).json({ code: 400, message: 'MISSING_USER_ID' });
+
+    if (!_.isNumber(fields?.rating)) return res.status(400).json({ code: 400, message: 'MISSING_RATING_FIELD' });
+    if (fields?.rating < 1 || fields?.rating > 5) return res.status(400).json({ code: 400, message: 'INVALID_RATING_FIELD' });
+
+    const { code, message, payload } = await userService.createRateApp({ ...fields, _id });
+
+    return res.status(code).json({ code, message, payload });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}

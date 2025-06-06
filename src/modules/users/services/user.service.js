@@ -8,7 +8,7 @@ export const makeService = (UserModel) => {
     if (fields.step === 1) {
       response = await UserModel.getUsers({ username: fields.username });
       if (response?.length > 0) return { code: 400, message: 'USER_ALREADY_EXISTS' };
-      
+
       response = await UserModel.getUsers({ email: fields.email });
       if (response?.length > 0) return { code: 400, message: 'EMAIL_ALREADY_IN_USE' };
 
@@ -76,6 +76,30 @@ export const makeService = (UserModel) => {
     return uResponse
   }
 
+  const createRateApp = async (fields) => {
+    const { _id } = fields;
+
+    let fieldsToUpdate = {};
+
+    if (fields.rating) {
+      const { rating, review } = fields;
+
+      fieldsToUpdate = {
+        ...fieldsToUpdate,
+        rate: {
+          rating,
+          review,
+          createdAt: new Date()
+        }
+      };
+    }
+
+    const result = await UserModel.updateUser(_id, fieldsToUpdate);
+    if (!result) throw ({ code: 404, message: `User id: (${_id}) not found` });
+
+    return { code: 200, message: 'USER_UPDATED_SUCCESSFULLY', payload: result };
+  }
+
   return {
     createUser,
     userSignIn,
@@ -108,6 +132,7 @@ export const makeService = (UserModel) => {
       if (!result) throw ({ message: `User id: (${_id}) not found` });
 
       return result
-    }
+    },
+    createRateApp
   }
 }

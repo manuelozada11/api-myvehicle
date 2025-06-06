@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema({
     role: { type: String, required: true },
     status: { type: Boolean, required: true },
     country: { type: String },
+    rate: {
+        rating: { type: Number, default: 0 },
+        review: { type: String, default: "" },
+        updatedAt: { type: Date, default: Date.now }
+    },
     notifications: [ {
         _id: { type: mongoose.Types.ObjectId, required: true },
         message: { type: String, required: true },
