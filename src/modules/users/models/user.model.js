@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     lastname: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true, match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ },
+    picture: { type: String },
     password: { type: String, required: true },
     phoneNumber: { type: String },
     role: { type: String, required: true },

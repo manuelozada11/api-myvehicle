@@ -65,6 +65,29 @@ export const makeSignIn = async (req, res) => {
   }
 }
 
+export const googleSignin = async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth) return res.status(400).json({ code: 400, message: 'MISSING_AUTHORIZATION_HEADER' });
+
+    if (!auth?.includes('Bearer ')) return res.status(400).json({ code: 400, message: 'INVALID_AUTHORIZATION_HEADER' });
+
+    const base64Credentials = auth.replace('Bearer ', '');
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+
+    const { code, message, info, token } = await userService.userSignIn({ googleToken: credentials });
+    if (code > 200) return res.status(code).json({ code, message });
+
+    return res.status(200).json({
+      code: 200,
+      user: info,
+      token
+    });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+
 export const getUser = async (req, res) => {
   try {
     const { _idUser } = _.pick(req.params, "_idUser");

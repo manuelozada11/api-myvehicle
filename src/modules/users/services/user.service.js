@@ -1,6 +1,7 @@
 import { emailConstants } from '../../../shared/constants/email.constants.js';
 import { getCleanUser, generateToken } from '../users.utils.js';
 import { Resend } from "resend";
+import { OAuth2Client } from 'google-auth-library';
 
 export const makeService = (UserModel) => {
   const createUser = async ({ lang, ...fields }) => {
@@ -39,11 +40,12 @@ export const makeService = (UserModel) => {
     return { code: 200, message: 'USER_CREATED_SUCCESSFULLY' };
   }
 
-  const userSignIn = async ({ usr, pwd }) => {
+  const userSignIn = async ({ usr, pwd, googleToken }) => {
+    if (googleToken) return await _googleSignin(googleToken);
+
     const user = await UserModel.userSignIn({ username: usr, password: pwd });
 
     if (!user) return { code: 404, message: "USER_NOT_FOUND" };
-
     if (!user.status) return { code: 403, message: "USER_INACTIVED" };
 
     const usrReduced = getCleanUser(user);
@@ -98,6 +100,49 @@ export const makeService = (UserModel) => {
     if (!result) throw ({ code: 404, message: `User id: (${_id}) not found` });
 
     return { code: 200, message: 'USER_UPDATED_SUCCESSFULLY', payload: result };
+  }
+
+  const _googleSignin = async (credentials) => {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: credentials,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email, given_name, family_name, picture, sub } = payload;
+
+    let user = await UserModel.getUsers({ email });
+
+    if (!user || !user.length) {
+      const username = email.split('@')[0];
+
+      const basicUser = {
+        name: given_name?.toString().trim().toLowerCase(),
+        lastname: family_name?.toString().trim().toLowerCase(),
+        email,
+        username: sub,
+        password: 'googleauth',
+        role: 'customer',
+        status: true,
+        notifications: [],
+        picture
+      }
+
+      user = await UserModel.createUser(basicUser);
+    } else {
+      user = user[0];
+      await UserModel.updateUser(user._id, {
+        name: given_name?.toString().trim().toLowerCase(),
+        lastname: family_name?.toString().trim().toLowerCase(),
+        picture
+      });
+    }
+
+    const usrReduced = getCleanUser(user);
+    const token = generateToken(usrReduced);
+
+    return { code: 200, message: "success", info: usrReduced, token }
   }
 
   return {
