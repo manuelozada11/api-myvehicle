@@ -108,6 +108,7 @@ export const makeService = (UserModel) => {
       idToken: credentials,
       audience: process.env.GOOGLE_CLIENT_ID
     });
+    console.log('google', process.env.GOOGLE_CLIENT_ID);
 
     const payload = ticket.getPayload();
     const { email, given_name, family_name, picture, sub } = payload;
@@ -115,8 +116,6 @@ export const makeService = (UserModel) => {
     let user = await UserModel.getUsers({ email });
 
     if (!user || !user.length) {
-      const username = email.split('@')[0];
-
       const basicUser = {
         name: given_name?.toString().trim().toLowerCase(),
         lastname: family_name?.toString().trim().toLowerCase(),
