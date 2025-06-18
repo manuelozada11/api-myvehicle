@@ -11,12 +11,15 @@ export const makeRepository = (MaintenanceModel) => {
     
     const deleteById = (maintenanceId) => MaintenanceModel.findByIdAndDelete(maintenanceId);
 
+    const deleteBy = (filters) => MaintenanceModel.deleteOne(filters);
+
     return {
         create,
         getAll,
         getMaintenances,
         getMaintenancesLimit,
         updateById,
-        deleteById
+        deleteById,
+        deleteBy
     }
 }

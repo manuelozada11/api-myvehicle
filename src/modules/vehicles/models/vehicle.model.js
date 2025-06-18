@@ -11,6 +11,7 @@ const vehicleSchema = new mongoose.Schema({
     energyType: { type: String, enum: ['95', '91', 'diesel'] },
     user: {
         _id: { type: mongoose.Types.ObjectId, required: true },
+        fullname: { type: String, required: true },
     },
     lastOwners: [{
         _id: { type: mongoose.Types.ObjectId, required: true },

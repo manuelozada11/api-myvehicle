@@ -6,19 +6,14 @@ export const createVehicle = async (req, res) => {
     try {
         const { 
             manufacture, 
-            model, 
-            year, 
-            displacement, 
-            plateNumber, 
-            type, 
-            energyType,
-            vehicleType
+            model,
+            ...data
         } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType", "vehicleType");
-        const { _id } = _.pick(req.user, "_id");
+        const user = req.user;
     
-        if (!manufacture || !model || !_id) return res.status(400).json({ message: 'missing required fields' });
+        if (!manufacture || !model || !user?._id) return res.status(400).json({ message: 'missing required fields' });
 
-        const result = await vehicleService.createVehicle({ manufacture, model, year, displacement, plateNumber, user: { _id }, type, energyType, vehicleType });
+        const result = await vehicleService.createVehicle({ user, manufacture, model, ...data });
         if (result.error) return res.status(500).json({ message: result.error });
         
         return res.status(200).json({ message: 'vehicle created successfully' });
@@ -140,7 +135,6 @@ export const deleteVehicle = async (req, res) => {
         
         if (!_id) return res.status(400).json({ message: 'missing required field' });
         const result = await vehicleService.deleteVehicle({ user: req.user, _id });
-        console.log(result);
 
         return res.status(200).json({ message: 'vehicle deleted successfully' });
     } catch (err) {

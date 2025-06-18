@@ -49,11 +49,11 @@ export const makeService = (MaintenanceModel) => {
     const quantity = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": userId, "createdAt": { "$gte": new Date(thisYear) } });
     response.quantity = quantity.length;
     
-    const battery = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "createdAt": -1 }, 1);
-    if (battery.length > 0) response.batteryDate = battery[0].createdAt;
+    const battery = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "date": -1 }, 1);
+    if (battery.length > 0) response.batteryDate = battery[0].date;
 
-    const tires = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "createdAt": -1 }, 1);
-    if (tires.length > 0) response.tiresDate = tires[0].createdAt;
+    const tires = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "tires" }, { "date": -1 }, 1);
+    if (tires.length > 0) response.tiresDate = tires[0].date;
 
     const thisMonth = new Date();
     thisMonth.setDate(1);
@@ -89,12 +89,20 @@ export const makeService = (MaintenanceModel) => {
     return { result: 200, response: 'maintenance deleted successfully' };
   }
 
+  const deleteMaintenance = async ({ userId, vehicleId }) => {
+    const maintenance = await MaintenanceModel.deleteBy({ userId, vehicleId });
+    if (!maintenance) return { result: 404, response: 'maintenance not found' };
+
+    return { result: 200, response: 'maintenance deleted successfully' };
+  }
+
   return {
     createMaintenance,
     getMaintenanceById,
     getAllMaintenancesById,
     getStatsByVehicle,
-    deleteMaintenanceById
+    deleteMaintenanceById,
+    deleteMaintenance
   }
 }
 

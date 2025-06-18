@@ -3,8 +3,13 @@ import mongoose from "mongoose";
 import { maintenanceService } from '../../maintenance/services/maintenance.service.js';
 
 export const makeService = (VehicleModel) => {
-  const createVehicle = async (data) => {
-    return await VehicleModel.createVehicle(data)
+  const createVehicle = async ({ user, ...data }) => {
+    const owner = {
+      _id: user._id,
+      fullname: `${user.name} ${user.lastname}`
+    }
+
+    return await VehicleModel.createVehicle({ user: owner, ...data });
   };
 
   const getVehicleById = async ({ _idUser, _idVehicle }) => {

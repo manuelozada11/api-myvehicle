@@ -108,7 +108,6 @@ export const makeService = (UserModel) => {
       idToken: credentials,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-    console.log('google', process.env.GOOGLE_CLIENT_ID);
 
     const payload = ticket.getPayload();
     const { email, given_name, family_name, picture, sub } = payload;
