@@ -30,7 +30,7 @@ export const makeService = (UserModel) => {
       const body = email.html.replace('{{name}}', user?.name);
 
       resend.emails.send({
-        from: 'Tangerine <onboarding@resend.dev>',
+        from: 'Taangi <onboarding@resend.dev>',
         to: user.email,
         subject: email.subject[lang],
         html: body.replace('{{body}}', email.body[lang])

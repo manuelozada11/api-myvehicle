@@ -2,8 +2,8 @@ export const emailConstants = [
   {
     emailId: 1,
     subject: {
-      en: 'Welcome to Tangerine!',
-      es: '¡Bienvenido a Tangerine!'
+      en: 'Welcome to Taangi!',
+      es: '¡Bienvenido a Taangi!'
     },
     body: {
       en: `We're happy to have you on board!`,
@@ -15,7 +15,7 @@ export const emailConstants = [
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Tangerine</title>
+        <title>Welcome to Taangi</title>
         <style>
           body {
             font-family: 'Arial', sans-serif;
@@ -129,7 +129,7 @@ export const emailConstants = [
           <!-- Header Section -->
           <tr>
             <td class="header" align="center">
-              <img src="https://tangerineapp.vercel.app/logo192.png" alt="Lo Que Pedí Logo">
+              <img src="https://taangi.com/logo192.png" alt="Taangi Logo">
             </td>
           </tr>
 
@@ -150,7 +150,7 @@ export const emailConstants = [
                     <img src="https://public.loquepedi.com/general/correo.png" alt="Email Icon" width="20" height="20">
                   </td>
                   <td>
-                    <a href="mailto:llego@loquepedi.com">tangerineapp@gmail.com</a>
+                    <a href="mailto:taangi mail">manuelozada11@hotmail.com</a>
                   </td>
                 </tr>
               </table>
@@ -160,8 +160,8 @@ export const emailConstants = [
           <!-- Footer Section -->
           <tr>
             <td class="footer" align="center">
-              <p><a href="https://tangerineapp.vercel.app">tangerineapp.vercel.com</a></p>
-              <p>© Tangerineapp 2025 - All rights reserved</p>
+              <p><a href="https://taangi.com">taangi.com</a></p>
+              <p>© Taangi 2025 - All rights reserved</p>
             </td>
           </tr>
         </table>
