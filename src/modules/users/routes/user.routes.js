@@ -4,15 +4,17 @@ import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserSt
 
 const router = express.Router();
 
-router.post("/signup", createUser);
-router.post("/:_id", checkAuth, updateUserPassword);
 router
+  .post("/signup", createUser)
+  .post("/:_id", checkAuth, updateUserPassword)
   .post("/:_id/rate", checkAuth, createRateApp)
   .post('/auth/google', googleSignin);
+
 router
   .get('/signin', makeSignIn)
   .get("/", checkAuth, getUsers)
   .get("/:_idUser", checkAuth, getUser);
+
 router.patch("/:_id", checkAuth, updateUserInfo);
 router.patch("/status/:_id", checkAuth, updateUserStatus);
 router.delete("/:_id", checkAuth, deleteUser);

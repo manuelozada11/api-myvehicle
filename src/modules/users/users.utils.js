@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { customError } from '../../shared/config/customError.js';
+import bcrypt from 'bcryptjs';
 
 const getCleanUser = (user) => {
   if (!user) return null;
@@ -57,9 +58,15 @@ const validateEmail = (email) => {
   if (!regexEmail.test(email)) throw customError('INVALID_EMAIL', 400);
 }
 
+const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt();
+  return bcrypt.hash(password, salt);
+}
+
 export {
   getCleanUser,
   generateToken,
   validatePassword,
-  validateEmail
+  validateEmail,
+  hashPassword
 }

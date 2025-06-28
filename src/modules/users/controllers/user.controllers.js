@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { userService } from '../services/index.js';
+import { userService } from '../services/user.service.js';
 import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
 import { validatePassword, validateEmail } from '../users.utils.js';
 
