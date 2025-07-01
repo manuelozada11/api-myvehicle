@@ -20,6 +20,17 @@ const userSchema = new mongoose.Schema({
         _id: { type: mongoose.Types.ObjectId, required: true },
         message: { type: String, required: true },
         priority: { type: Boolean }
+    } ],
+    integrations: [ {
+        name: { type: String, required: true },
+        refreshToken: { type: String, required: true },
+        tokenType: { type: String }, // Optional field for token type
+        accessToken: { type: String },
+        expiresAt: { type: Number },
+        scope: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+        state: { type: String },
+        metadata: { type: String } // Optional field for additional metadata
     } ]
 }, { timestamps: true })
 

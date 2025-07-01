@@ -1,14 +1,18 @@
 import express from "express";
 import { checkAuth } from '../../../shared/middlewares/checkAuth.js';
-import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser, createRateApp, googleSignin } from "../controllers/user.controllers.js";
+import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser, createRateApp, googleSignin, addIntegration, 
+  activateUser
+ } from "../controllers/user.controllers.js";
 
 const router = express.Router();
 
 router
   .post("/signup", createUser)
+  .post('/activate', checkAuth, activateUser)
+  .post('/auth/google', googleSignin)
+  // .post('/integration/:_id', addIntegration)
   .post("/:_id", checkAuth, updateUserPassword)
   .post("/:_id/rate", checkAuth, createRateApp)
-  .post('/auth/google', googleSignin);
 
 router
   .get('/signin', makeSignIn)

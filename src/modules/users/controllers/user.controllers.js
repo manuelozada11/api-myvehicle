@@ -209,3 +209,33 @@ export const createRateApp = async (req, res) => {
     defaultCatcher(e, res);
   }
 }
+
+export const addIntegration = async (req, res) => {
+  try {
+    const fields = _.pick(req.body, "code", "scope", "state");
+    const { _id } = _.pick(req.params, "_id");
+
+    if (_.isEmpty(_id)) return res.status(400).json({ code: 400, message: 'MISSING_USER_ID' });
+
+    if (_.isEmpty(fields?.code)) return res.status(400).json({ code: 400, message: 'MISSING_CODE_FIELD' });
+    if (_.isEmpty(fields?.scope)) return res.status(400).json({ code: 400, message: 'MISSING_SCOPE_FIELD' });
+
+    const { code, message, payload } = await userService.addIntegration({ ...fields, _id });
+    if (code > 200) return res.status(code).json({ code, message });
+
+    return res.status(code).json({ code, message, payload });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+
+export const activateUser = async (req, res) => {
+  try {
+    if (!req.user?._id) return res.status(400).json({ code: 400, message: 'MISSING_USER' });
+    const { code, message } = await userService.activateUser(req.user);
+
+    return res.status(code).json({ code, message });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}

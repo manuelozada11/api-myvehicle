@@ -5,6 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { UserModel } from "../models/user.model.js";
 import { makeUserRepository } from "../repositories/index.js";
 import bcrypt from 'bcryptjs';
+import { httpClient } from '../../../shared/infra/http/httpClient.js';
 
 export const makeService = (repository) => {
   const createUser = async ({ lang, password, name, lastname, username, email, ...fields }) => {
@@ -21,7 +22,7 @@ export const makeService = (repository) => {
 
     const hashed = await hashPassword(password);
     const user = {
-      status: true,
+      status: false,
       username: username.toString().trim().toLowerCase(),
       email: email.toString().trim().toLowerCase(),
       name: name.toString().trim(),
@@ -30,6 +31,7 @@ export const makeService = (repository) => {
       password: hashed,
       role: "customer",
       notifications: [],
+      integrations: []
     }
 
     response = await repository.createUser(user);
@@ -37,13 +39,21 @@ export const makeService = (repository) => {
     if (process.env?.EMAIL_KEY) {
       const resend = new Resend(process.env.EMAIL_KEY);
       const email = emailConstants.find(e => e.emailId === 1);
-      const body = email.html.replace('{{name}}', user?.name);
+
+      const usrReduced = getCleanUser(response);
+      const token = generateToken(usrReduced);
+
+      let html = email.html;
+      html = html.replace('{{name}}', user?.name || '');
+      html = html.replace('{{body}}', email.body[lang] || '');
+      html = html.replace('{{btnName}}', email.btnName[lang] || '');
+      html = html.replace('{{token}}', token);
 
       resend.emails.send({
         from: 'Taangi <onboarding@resend.dev>',
         to: user.email,
         subject: email.subject[lang],
-        html: body.replace('{{body}}', email.body[lang])
+        html
       });
     }
 
@@ -54,7 +64,7 @@ export const makeService = (repository) => {
     if (googleToken) return await _googleSignin(googleToken);
 
     const user = await repository.userSignIn({ username: usr });
-    
+
     const authenticated = await bcrypt.compare(pwd, user.password);
     if (!authenticated) return { code: 401, message: "INVALID_CREDENTIALS" };
 
@@ -115,6 +125,60 @@ export const makeService = (repository) => {
     return { code: 200, message: 'USER_UPDATED_SUCCESSFULLY', payload: result };
   }
 
+  const addIntegration = async ({ _id, ...body }) => {
+    const { code, state, scope } = body;
+
+    const user = await repository.getUserBy({ _id, "integrations.name": "strava" });
+    if (user) {
+      const strava = user.integrations.find(i => i.name === "strava");
+      const athlete = await _getAthlete(strava.accessToken);
+
+      return { code: 200, message: 'Integration already exists', payload: athlete.bikes };
+    }
+
+    const client = httpClient({ baseURL: `${process.env.STRAVA_API_URL}` });
+    const params = {
+      client_id: process.env.STRAVA_CLIENT_ID,
+      client_secret: process.env.STRAVA_CLIENT_SECRET,
+      code,
+      grant_type: 'authorization_code'
+    };
+    const response = await client.post('/oauth/token', params);
+    if (response.status > 200) return { code: 500, message: 'Error during Strava API call' };
+
+    const athleteToken = response.data;
+    const result = await repository.updateUser(_id, {
+      $push: {
+        integrations: {
+          name: "strava",
+          refreshToken: code,
+          accessToken: athleteToken.access_token,
+          expiresAt: athleteToken.expires_at,
+          tokenType: athleteToken.token_type,
+          scope,
+          metadata: JSON.stringify(athleteToken.athlete) // Store athlete data as metadata
+        }
+      }
+    });
+    if (!result) return { code: 404, message: 'User not found' };
+
+    const athlete = await _getAthlete(athleteToken.accessToken);
+    return { code: 200, message: 'Integration already exists', payload: athlete.bikes };
+  }
+
+  const activateUser = async (user) => {
+    const found = await repository.getUserById(user._id);
+    if (!found) return ({ code: 404, message: `User id: (${user._id}) not found` });
+    if (found.status) return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
+    // if (found.status) return ({ code: 400, message: 'USER_ALREADY_ACTIVATED' });
+
+    const result = await repository.updateUser(user._id, { status: true });
+    if (!result) throw ({ code: 404, message: `User id: (${user._id}) not found` });
+
+    return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
+  }
+
+  // Private functions
   const _googleSignin = async (credentials) => {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
@@ -156,6 +220,22 @@ export const makeService = (repository) => {
     return { code: 200, message: "success", info: usrReduced, token }
   }
 
+  const _getAthlete = async (token) => {
+    const client = httpClient({ baseURL: `${process.env.STRAVA_API_URL}` });
+    const response = await client.get(`/athlete`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (response.status > 200) {
+      console.error("Error during Strava API call:", response.status, response.statusText);
+      throw new Error('Error fetching athlete data from Strava');
+    }
+
+    return response.data;
+  }
+
   return {
     createUser,
     userSignIn,
@@ -189,7 +269,9 @@ export const makeService = (repository) => {
 
       return result
     },
-    createRateApp
+    createRateApp,
+    addIntegration,
+    activateUser
   }
 }
 

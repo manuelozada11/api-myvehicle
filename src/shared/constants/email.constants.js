@@ -6,8 +6,12 @@ export const emailConstants = [
       es: '¡Bienvenido a Taangi!'
     },
     body: {
-      en: `We're happy to have you on board!`,
-      es: `¡Estamos felices de tenerte con nosotros!`
+      en: `We're happy to have you on board! Please click the button below to activate your account`,
+      es: `¡Estamos felices de tenerte con nosotros! Por favor, haz clic en el botón de abajo para activar tu cuenta`
+    },
+    btnName: {
+      en: 'Activate',
+      es: 'Activar'
     },
     html: `<!DOCTYPE html>
       <html lang="es">
@@ -66,9 +70,20 @@ export const emailConstants = [
           }
 
           .content a {
-            color: #f08411;
             text-decoration: none;
             font-weight: bold;
+          }
+
+          .btn {
+            display: inline-block;
+            background-color: #f08411;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
           }
 
           .contact-info {
@@ -138,22 +153,9 @@ export const emailConstants = [
             <td class="content" align="center">
               <h1>Hey {{name}},</h1>
               <p>{{body}}</p>
-            </td>
-          </tr>
 
-          <!-- Contact Information -->
-          <tr>
-            <td class="contact-info" align="center">
-              <table class="contact-table" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 25px;">
-                <tr class="contact-item">
-                  <td>
-                    <img src="https://public.loquepedi.com/general/correo.png" alt="Email Icon" width="20" height="20">
-                  </td>
-                  <td>
-                    <a href="mailto:taangi mail">manuelozada11@hotmail.com</a>
-                  </td>
-                </tr>
-              </table>
+              <!-- Nuevo botón -->
+              <a href="https://taangi.com/activate/{{token}}" class="btn">{{btnName}}</a>
             </td>
           </tr>
 
