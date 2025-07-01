@@ -64,6 +64,7 @@ export const makeService = (repository) => {
     if (googleToken) return await _googleSignin(googleToken);
 
     const user = await repository.userSignIn({ username: usr });
+    if (!user) return { code: 404, message: "USER_NOT_FOUND" };
 
     const authenticated = await bcrypt.compare(pwd, user.password);
     if (!authenticated) return { code: 401, message: "INVALID_CREDENTIALS" };
