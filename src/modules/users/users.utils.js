@@ -13,7 +13,16 @@ const getCleanUser = (user) => {
     username: user.username,
     country: user.country,
     email: user.email,
+    integrations: _integrationMapper(user.integrations),
   }
+}
+
+const _integrationMapper = (integrations) => {
+  if (!integrations && !integrations?.length) return [];
+
+  return integrations.map(integration => {
+    return { name: integration.name, status: integration.status }
+  });
 }
 
 const generateToken = (usr) => {

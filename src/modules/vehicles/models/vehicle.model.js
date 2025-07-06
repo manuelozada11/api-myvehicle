@@ -24,7 +24,9 @@ const vehicleSchema = new mongoose.Schema({
     bodySerial: { type: String },
     insuranceDate: { type: Date },
     taxesDate: { type: Date },
-    isTransferActivated: { type: Boolean }
+    isTransferActivated: { type: Boolean },
+    extId: { type: String }, // External ID for integrations
+    from: { type: String }, // Source of the vehicle data (e.g., 'strava', 'manual')
 }, { timestamps: true });
 
 export const VehicleModel = mongoose.model('Vehicle', vehicleSchema);

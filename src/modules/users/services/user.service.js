@@ -6,6 +6,7 @@ import { UserModel } from "../models/user.model.js";
 import { makeUserRepository } from "../repositories/index.js";
 import bcrypt from 'bcryptjs';
 import { httpClient } from '../../../shared/infra/http/httpClient.js';
+import { config } from "../../../shared/config/config.js";
 
 export const makeService = (repository) => {
   const createUser = async ({ lang, password, name, lastname, username, email, ...fields }) => {
@@ -120,51 +121,26 @@ export const makeService = (repository) => {
       };
     }
 
-    const result = await repository.updateUser(_id, fieldsToUpdate);
+    const result = await repository.updateUserById(_id, fieldsToUpdate);
     if (!result) throw ({ code: 404, message: `User id: (${_id}) not found` });
 
     return { code: 200, message: 'USER_UPDATED_SUCCESSFULLY', payload: result };
   }
 
   const addIntegration = async ({ _id, ...body }) => {
-    const { code, state, scope } = body;
+    const { code } = body;
 
+    // we check if the user already has a Strava integration added
     const user = await repository.getUserBy({ _id, "integrations.name": "strava" });
-    if (user) {
-      const strava = user.integrations.find(i => i.name === "strava");
-      const athlete = await _getAthlete(strava.accessToken);
+    if (user) return { code: 202, message: 'Integration already exists', name: 'strava' };
 
-      return { code: 200, message: 'Integration already exists', payload: athlete.bikes };
-    }
+    const stravaConfig = await _exchangeCodeForToken(code);
 
-    const client = httpClient({ baseURL: `${process.env.STRAVA_API_URL}` });
-    const params = {
-      client_id: process.env.STRAVA_CLIENT_ID,
-      client_secret: process.env.STRAVA_CLIENT_SECRET,
-      code,
-      grant_type: 'authorization_code'
-    };
-    const response = await client.post('/oauth/token', params);
-    if (response.status > 200) return { code: 500, message: 'Error during Strava API call' };
-
-    const athleteToken = response.data;
-    const result = await repository.updateUser(_id, {
-      $push: {
-        integrations: {
-          name: "strava",
-          refreshToken: code,
-          accessToken: athleteToken.access_token,
-          expiresAt: athleteToken.expires_at,
-          tokenType: athleteToken.token_type,
-          scope,
-          metadata: JSON.stringify(athleteToken.athlete) // Store athlete data as metadata
-        }
-      }
-    });
+    // we create the integration in our database
+    const result = await repository.updateUserById(_id, { $push: { integrations: stravaConfig } });
     if (!result) return { code: 404, message: 'User not found' };
 
-    const athlete = await _getAthlete(athleteToken.accessToken);
-    return { code: 200, message: 'Integration already exists', payload: athlete.bikes };
+    return { code: 200, message: 'Integration added successfully', name: 'strava' };
   }
 
   const activateUser = async (user) => {
@@ -173,10 +149,37 @@ export const makeService = (repository) => {
     if (found.status) return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
     // if (found.status) return ({ code: 400, message: 'USER_ALREADY_ACTIVATED' });
 
-    const result = await repository.updateUser(user._id, { status: true });
+    const result = await repository.updateUserById(user._id, { status: true });
     if (!result) throw ({ code: 404, message: `User id: (${user._id}) not found` });
 
     return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
+  }
+
+  const getStravaAthlete = async (userConfig) => {
+    try {
+      // Validate the Strava token
+      userConfig = await _validateStravaToken(userConfig);
+
+      const client = httpClient({ baseURL: `${config.strava.api_url}/api/v3`, headers: { Authorization: `Bearer ${userConfig.accessToken}` } });
+      const response = await client.get(`/athlete`);
+
+      // TODO: validate if the athlete has bikes
+      // TODO: validate if the bike is already registered in their account
+
+      return response.data;
+    } catch (error) {
+      // if (error.status === 401) {
+      //   console.error("Strava token expired, refreshing...");
+
+      //   const refreshedToken = await _refreshStravaToken(userConfig);
+      //   userConfig.access_token = refreshedToken.access_token;
+
+      //   return _getAthlete(userConfig);
+      // }
+
+      console.error("Error during Strava API call:", error);
+      throw new Error('Error fetching athlete data from Strava');
+    }
   }
 
   // Private functions
@@ -191,7 +194,6 @@ export const makeService = (repository) => {
     const { email, given_name, family_name, picture, sub } = payload;
 
     let user = await repository.getUsers({ email });
-
     if (!user || !user.length) {
       const basicUser = {
         name: given_name?.toString().trim().toLowerCase(),
@@ -202,13 +204,14 @@ export const makeService = (repository) => {
         role: 'customer',
         status: true,
         notifications: [],
+        integrations: [],
         picture
       }
 
       user = await repository.createUser(basicUser);
     } else {
       user = user[0];
-      await repository.updateUser(user._id, {
+      await repository.updateUserById(user._id, {
         name: given_name?.toString().trim().toLowerCase(),
         lastname: family_name?.toString().trim().toLowerCase(),
         picture
@@ -221,20 +224,74 @@ export const makeService = (repository) => {
     return { code: 200, message: "success", info: usrReduced, token }
   }
 
-  const _getAthlete = async (token) => {
-    const client = httpClient({ baseURL: `${process.env.STRAVA_API_URL}` });
-    const response = await client.get(`/athlete`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+  /* Strava API functions */
+  const _exchangeCodeForToken = async (code) => {
+    try {
+      const client = httpClient({ baseURL: config.strava.api_url });
+      const params = {
+        client_id: config.strava.clientId,
+        client_secret: config.strava.clientSecret,
+        code: code,
+        grant_type: 'authorization_code'
+      };
 
-    if (response.status > 200) {
-      console.error("Error during Strava API call:", response.status, response.statusText);
-      throw new Error('Error fetching athlete data from Strava');
+      // if so, we proceed to exchange the code for an access token
+      const response = await client.post('/oauth/token', params);
+      if (response.status > 200) return { code: 500, message: 'Error during Strava API call' };
+
+      const athleteToken = response.data;
+      const stravaConfig = {
+        name: "strava",
+        refreshToken: athleteToken.refresh_token,
+        accessToken: athleteToken.access_token,
+        expiresAt: athleteToken.expires_at,
+        tokenType: athleteToken.token_type,
+        scope: "read,profile:read_all",
+        metadata: JSON.stringify(athleteToken.athlete) // Store athlete data as metadata
+      };
+
+      return stravaConfig;
+    } catch (error) {
+      console.error("Error during Strava API call:", error);
+      throw new Error('Error exchanging code for Strava token');
+    }
+  }
+
+  const _refreshStravaToken = async (stravaConfig, userId) => {
+    try {
+      const params = {
+        client_id: config.strava.clientId,
+        client_secret: config.strava.clientSecret,
+        refresh_token: stravaConfig.refreshToken,
+        grant_type: 'refresh_token'
+      };
+
+      const client = httpClient({ baseURL: config.strava.api_url });
+      const response = await client.post('/oauth/token', params);
+
+      // Update the user's integration with the new access token
+      const dbconfig = await repository.updateUserBy({ _id: userId, "integrations.name": "strava" }, {
+        $set: {
+          "integrations.$.refreshToken": response.data.refresh_token,
+          "integrations.$.accessToken": response.data.access_token,
+          "integrations.$.expiresAt": response.data.expires_at
+        }
+      });
+
+      return dbconfig.integrations.find(i => i.name === "strava");
+    } catch (error) {
+      console.error("Error during Strava API call:", error.data || error.message);
+      throw new Error('Error refreshing Strava token');
+    }
+  }
+
+  const _validateStravaToken = async (stravaConfig) => {
+    if (stravaConfig.expiresAt && stravaConfig.expiresAt < Math.floor(Date.now() / 1000)) {
+      console.log("Strava token expired, refreshing...");
+      stravaConfig = await _refreshStravaToken(stravaConfig, _id);
     }
 
-    return response.data;
+    return stravaConfig;
   }
 
   return {
@@ -243,21 +300,21 @@ export const makeService = (repository) => {
     getUserById,
     getUsers,
     updateUser: async (_id, name, lastname, email, password, phoneNumber) => {
-      const result = await repository.updateUser({ _id }, { name, lastname, phoneNumber });
+      const result = await repository.updateUserById({ _id }, { name, lastname, phoneNumber });
 
       if (!result) throw ({ message: `User id: (${_id}) not found` });
 
       return result
     },
     updateUserPassword: async (_id, password) => {
-      const result = await repository.updateUser({ _id }, { password });
+      const result = await repository.updateUserById({ _id }, { password });
 
       if (!result) throw ({ message: `User id: (${_id}) not found` });
 
       return result
     },
     updateUserStatus: async (_id, status) => {
-      const result = await repository.updateUser({ _id }, { status });
+      const result = await repository.updateUserById({ _id }, { status });
 
       if (!result) throw ({ message: `User id: (${_id}) not found` });
 
@@ -272,7 +329,8 @@ export const makeService = (repository) => {
     },
     createRateApp,
     addIntegration,
-    activateUser
+    activateUser,
+    getStravaAthlete
   }
 }
 

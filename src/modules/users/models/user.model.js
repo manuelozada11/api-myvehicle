@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
         scope: { type: String, required: true },
         createdAt: { type: Date, default: Date.now },
         state: { type: String },
+        status: { type: Boolean, default: true }, // Optional field for integration status
         metadata: { type: String } // Optional field for additional metadata
     } ]
 }, { timestamps: true })

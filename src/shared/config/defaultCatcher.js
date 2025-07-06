@@ -1,8 +1,8 @@
 import * as Sentry from '@sentry/node';
 
 export const defaultCatcher = (e, res) => {
-    console.error('-------------- default catcher', JSON.stringify(e));
-    console.log(e);
+    console.error('-------------- default catcher');
+    console.log(e?.message ?? 'No message provided');
     Sentry.captureException(e);
 
     if (res) {
@@ -11,6 +11,6 @@ export const defaultCatcher = (e, res) => {
         else if (e.code === 403) return res.status(403).json({ code: 403, message: e.message });
         else if (e.code === 404) return res.status(404).json({ code: 404, message: e.message });
 
-        return res.status(500).json({ code: 500, message: 'INTERNAL_SERVER_ERROR' });
+        return res.status(500).json({ code: 500, message: e.message ?? '[Taangi] Internal server error' });
     }
 }

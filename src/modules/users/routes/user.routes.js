@@ -10,7 +10,7 @@ router
   .post("/signup", createUser)
   .post('/activate', checkAuth, activateUser)
   .post('/auth/google', googleSignin)
-  // .post('/integration/:_id', addIntegration)
+  .post('/integration/:_id', addIntegration)
   .post("/:_id", checkAuth, updateUserPassword)
   .post("/:_id/rate", checkAuth, createRateApp)
 

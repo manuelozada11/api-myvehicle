@@ -4,18 +4,18 @@ import _ from 'lodash';
 
 export const createVehicle = async (req, res) => {
     try {
-        const { 
-            manufacture, 
+        const {
+            manufacture,
             model,
             ...data
-        } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType", "vehicleType");
+        } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType", "vehicleType", "from", "extId");
         const user = req.user;
-    
+
         if (!manufacture || !model || !user?._id) return res.status(400).json({ message: 'missing required fields' });
 
         const result = await vehicleService.createVehicle({ user, manufacture, model, ...data });
         if (result.error) return res.status(500).json({ message: result.error });
-        
+
         return res.status(200).json({ message: 'vehicle created successfully' });
     } catch (err) {
         console.log(err);
@@ -27,9 +27,9 @@ export const getVehicle = async (req, res) => {
     try {
         const { _idVehicle } = _.pick(req.params, '_idVehicle');
         const { _id } = _.pick(req.user, '_id');
-        
+
         if (!_idVehicle || !_id) return res.status(400).json({ message: 'missing required fields' });
-        
+
         const vehicle = await vehicleService.getVehicleById({ _idUser: _id, _idVehicle });
         if (vehicle?.length === 0) return res.status(404).json({ message: 'vehicle not found' });
 
@@ -44,9 +44,9 @@ export const getVehicleInfo = async (req, res) => {
     try {
         const { _idVehicle } = _.pick(req.params, '_idVehicle');
         const { _id } = _.pick(req.user, '_id');
-        
+
         if (!_idVehicle || !_id) return res.status(400).json({ message: 'missing required fields' });
-        
+
         const vehicle = await vehicleService.getVehicleInfoById({ _idUser: _id, _idVehicle });
         if (vehicle?.length === 0) return res.status(404).json({ message: 'vehicle not found' });
 
@@ -60,7 +60,7 @@ export const getVehicleInfo = async (req, res) => {
 export const getVehicles = async (req, res) => {
     try {
         const { _id } = _.pick(req.user, '_id');
-        
+
         if (!_id) return res.status(400).json({ message: 'MISSING_REQUIRED_FIELD' });
         const vehicles = await vehicleService.getVehiclesByUser({ _id });
 
@@ -76,7 +76,7 @@ export const updateVehicle = async (req, res) => {
     try {
         const { _vehicleId } = _.pick(req.params, "_vehicleId");
         const { _id: _userId } = _.pick(req.user, "_id");
-        const fields = _.pick(req.body, 
+        const fields = _.pick(req.body,
             "bodySerial", "boughtDate", "color",
             "displacement", "energyType", "insuranceDate",
             "manufacture", "model", "passengers",
@@ -102,7 +102,7 @@ export const authorizateTransfer = async (req, res) => {
 
         await vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: true });
         setTimeout(() => {
-             vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: false });
+            vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: false });
         }, 30000);
 
         return res.status(200).json({ message: 'transfer activated succesfully' });
@@ -132,12 +132,48 @@ export const transferVehicle = async (req, res) => {
 export const deleteVehicle = async (req, res) => {
     try {
         const { _id } = _.pick(req.params, '_id');
-        
+
         if (!_id) return res.status(400).json({ message: 'missing required field' });
         const result = await vehicleService.deleteVehicle({ user: req.user, _id });
 
         return res.status(200).json({ message: 'vehicle deleted successfully' });
     } catch (err) {
         defaultCatcher(err, res);
+    }
+}
+
+export const getExternalVehicles = async (req, res) => {
+    try {
+        const { _id } = _.pick(req.user, '_id');
+        const { integration } = _.pick(req.params, 'integration');
+
+        if (_.isEmpty(_id)) return res.status(400).json({ message: 'missing user id field' });
+        if (_.isEmpty(integration)) return res.status(400).json({ message: 'missing integration name field' });
+
+        const { code, message, payload } = await vehicleService.getExternalVehicles({ userId: _id, integration });
+
+        if (code > 200) return res.status(code).json({ code, message });
+
+        return res.status(code).json({ code, message, payload });
+    } catch (e) {
+        defaultCatcher(e, res);
+    }
+}
+
+export const connectIntegration = async (req, res) => {
+    try {
+        const { _id } = _.pick(req.user, '_id');
+        const { vehicleId } = _.pick(req.params, 'vehicleId');
+        const { integrationName, extId, displacement } = _.pick(req.body, 'integrationName', 'extId', 'displacement');
+        
+        if (_.isEmpty(_id)) return res.status(400).json({ message: 'missing user id field' });
+        if (_.isEmpty(vehicleId)) return res.status(400).json({ message: 'missing vehicleId field' });
+        if (_.isEmpty(integrationName)) return res.status(400).json({ message: 'missing integration name field' });
+        if (_.isEmpty(extId)) return res.status(400).json({ message: 'missing extId field' });
+
+        const { code, message } = await vehicleService.connectIntegration({ userId: _id, integrationName, extId, vehicleId, displacement });
+        return res.status(code).json({ code, message });
+    } catch (e) {
+        defaultCatcher(e, res);
     }
 }

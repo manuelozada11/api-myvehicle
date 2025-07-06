@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { maintenanceService } from '../../maintenance/services/maintenance.service.js';
+import { userService } from '../../users/services/user.service.js';
 
 export const makeService = (VehicleModel) => {
   const createVehicle = async ({ user, ...data }) => {
@@ -78,8 +79,8 @@ export const makeService = (VehicleModel) => {
     if (!vehicle.isTransferActivated) return { code: 203, message: 'vehicle transferation isnt activated' };
 
     const fields = {
-      _userId: jwtResult.user._id,
-      _vehicleId,
+      userId: jwtResult.user._id,
+      vehicleId: _vehicleId,
       user: { _id: _userId },
       "$push": { lastOwners: { _id: jwtResult.user._id, fullname: `${jwtResult.user.name} ${jwtResult.user.lastname}` } },
       isTransferActivated: false
@@ -91,6 +92,70 @@ export const makeService = (VehicleModel) => {
     return { code: 200, message: 'vehicle transfered succesfully' };
   }
 
+  const getExternalVehicles = async ({ userId, integration }) => {
+    const user = await userService.getUserById({ _id: userId });
+    if (!user) return { code: 404, message: 'user not found' };
+
+    if (integration !== 'strava') return { code: 404, message: 'integration not supported' };
+
+    const userConfig = user.integrations.find(i => i.name === integration);
+    if (!userConfig) return { code: 404, message: 'integration not found' };
+
+    const bikes = await _getAthleteBikes(userConfig);
+    if (!bikes.length) return { code: 404, message: 'no bikes found' };
+
+    // check if vehicle already exists
+    const noExistingBikes = await Promise.all(bikes.map(async (bike) => {
+        const exists = await _vehicleExists(userId, bike.id, integration);
+        if (exists) return null;
+
+        return bike;
+      }
+    ));
+    const filteredBikes = noExistingBikes.filter(bike => bike !== null);
+    if (!filteredBikes.length) return { code: 404, message: 'no bikes found' };
+
+    return { code: 200, message: "bikes found", payload: bikes };
+  }
+
+  const connectIntegration = async ({ userId, extId, integrationName, vehicleId, displacement }) => {
+    const user = await userService.getUserById({ _id: userId });
+    if (!user) return { code: 404, message: 'user not found' };
+
+    if (integrationName !== 'strava') return { code: 404, message: 'integration not supported' };
+    const userConfig = user.integrations.find(i => i.name === integrationName);
+    if (!userConfig) return { code: 404, message: 'integration not found' };
+
+    const vehicle = await VehicleModel.getVehicleById({ _idVehicle: vehicleId, _idUser: userId });
+    if (!vehicle) return { code: 404, message: 'vehicle not found' };
+
+    const params = {
+      vehicleId,
+      userId,
+      extId,
+      from: integrationName,
+      displacement: displacement ? Number(displacement) : vehicle.displacement,
+    }
+    const connected = await updateVehicle(params);
+
+    return { code: 200, message: 'vehicle connected successfully' };
+  }
+
+  // Private Functions
+  const _getAthleteBikes = async (userConfig) => {
+    const athlete = await userService.getStravaAthlete(userConfig);
+    if (!athlete) return [];
+
+    const bikes = athlete?.bikes;
+
+    return bikes;
+  }
+
+  const _vehicleExists = async (userId, extId, integrationName) => {
+    const exists = await VehicleModel.getVehicles({ "user._id": userId, from: integrationName, extId });
+    return exists?.length > 0 ? true : false;
+  }
+
   return {
     createVehicle,
     getVehicleById,
@@ -98,6 +163,8 @@ export const makeService = (VehicleModel) => {
     getVehiclesByUser,
     updateVehicle,
     deleteVehicle,
-    transferVehicle
+    transferVehicle,
+    getExternalVehicles,
+    connectIntegration
   }
 }
