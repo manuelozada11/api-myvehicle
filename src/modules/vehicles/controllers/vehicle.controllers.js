@@ -84,7 +84,7 @@ export const updateVehicle = async (req, res) => {
 
         if (_.isEmpty(_userId) || _.isEmpty(_vehicleId)) return res.status(400).json({ message: 'missing required fields' });
 
-        const vehicle = await vehicleService.updateVehicle({ _userId, _vehicleId, ...fields });
+        const vehicle = await vehicleService.updateVehicle({ userId: _userId, vehicleId: _vehicleId, ...fields });
 
         return res.status(200).json({ message: 'vehicle updated succesfully', vehicle });
     } catch (err) {
@@ -100,9 +100,9 @@ export const authorizateTransfer = async (req, res) => {
 
         if (_.isEmpty(_userId) || _.isEmpty(_vehicleId)) return res.status(400).json({ message: 'missing required fields' });
 
-        await vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: true });
-        setTimeout(() => {
-            vehicleService.updateVehicle({ _userId, _vehicleId, isTransferActivated: false });
+        await vehicleService.updateVehicle({ userId: _userId, vehicleId: _vehicleId, isTransferActivated: true });
+        setTimeout(async () => {
+            await vehicleService.updateVehicle({ userId: _userId, vehicleId: _vehicleId, isTransferActivated: false });
         }, 30000);
 
         return res.status(200).json({ message: 'transfer activated succesfully' });
@@ -165,7 +165,7 @@ export const connectIntegration = async (req, res) => {
         const { _id } = _.pick(req.user, '_id');
         const { vehicleId } = _.pick(req.params, 'vehicleId');
         const { integrationName, extId, displacement } = _.pick(req.body, 'integrationName', 'extId', 'displacement');
-        
+
         if (_.isEmpty(_id)) return res.status(400).json({ message: 'missing user id field' });
         if (_.isEmpty(vehicleId)) return res.status(400).json({ message: 'missing vehicleId field' });
         if (_.isEmpty(integrationName)) return res.status(400).json({ message: 'missing integration name field' });

@@ -8,9 +8,9 @@ export const makeService = (RefuelModel) => {
         else gasStation = { pricePerLt };
         
         if (data?.displacement) {
-            vehicleService.updateVehicle({
-                _userId: data.user._id, 
-                _vehicleId: data.vehicle._id, 
+            await vehicleService.updateVehicle({
+                userId: data.user._id, 
+                vehicleId: data.vehicle._id, 
                 displacement: data.displacement
             });
         }

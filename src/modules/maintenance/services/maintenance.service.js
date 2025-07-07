@@ -14,8 +14,8 @@ export const makeService = (MaintenanceModel) => {
 
     if (fields?.kms) {
       await vehicleService.updateVehicle({
-        _userId: user._id,
-        _vehicleId: vehicleId,
+        userId: user._id,
+        vehicleId: vehicleId,
         displacement: fields.kms
       });
     }
