@@ -140,7 +140,7 @@ export const makeService = (repository) => {
     const result = await repository.updateUserById(_id, { $push: { integrations: stravaConfig } });
     if (!result) return { code: 404, message: 'User not found' };
 
-    return { code: 200, message: 'Integration added successfully', name: 'strava' };
+    return { code: 200, message: 'Integration added successfully', name: 'strava', user: getCleanUser(result) };
   }
 
   const activateUser = async (user) => {

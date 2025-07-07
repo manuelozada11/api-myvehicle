@@ -218,10 +218,10 @@ export const addIntegration = async (req, res) => {
     if (_.isEmpty(_id)) return res.status(400).json({ code: 400, message: 'MISSING_USER_ID' });
     if (_.isEmpty(fields?.code)) return res.status(400).json({ code: 400, message: 'MISSING_CODE_FIELD' });
 
-    const { code, message, name } = await userService.addIntegration({ ...fields, _id });
+    const { code, message, name, user } = await userService.addIntegration({ ...fields, _id });
     if (code > 202) return res.status(code).json({ code, message });
 
-    return res.status(code).json({ code, message, name });
+    return res.status(code).json({ code, message, name, user });
   } catch (e) {
     defaultCatcher(e, res);
   }
