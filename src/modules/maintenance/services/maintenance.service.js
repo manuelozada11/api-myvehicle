@@ -13,12 +13,15 @@ export const makeService = (MaintenanceModel) => {
     const vehicle = { _id: vehicleId, fullname: `${vehicleResp.manufacture} ${vehicleResp.model}` };
 
     if (fields?.kms) {
-      vehicleService.updateVehicle({
-          _userId: user._id, 
-          _vehicleId: vehicleId, 
-          displacement: fields.kms
+      await vehicleService.updateVehicle({
+        _userId: user._id,
+        _vehicleId: vehicleId,
+        displacement: fields.kms
       });
-  }
+    }
+    else {
+      fields.kms = vehicleResp?.displacement;
+    }
 
     await MaintenanceModel.create({ user: owner, vehicle, ...fields });
     return { result: 200, response: 'maintenance created successfully' };
@@ -28,7 +31,7 @@ export const makeService = (MaintenanceModel) => {
     const maintenance = await MaintenanceModel.getMaintenances({ "user._id": user._id, "vehicle._id": vehicleId, _id: maintenanceId });
     if (!maintenance) return { result: 404, response: 'maintenance not found', payload: null };
 
-    return { result: 200, response: "maintenance found", payload: maintenance}
+    return { result: 200, response: "maintenance found", payload: maintenance }
   }
 
   const getAllMaintenancesById = async ({ vehicleId, user, qty }) => {
@@ -48,7 +51,7 @@ export const makeService = (MaintenanceModel) => {
 
     const quantity = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": userId, "createdAt": { "$gte": new Date(thisYear) } });
     response.quantity = quantity.length;
-    
+
     const battery = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "date": -1 }, 1);
     if (battery.length > 0) response.batteryDate = battery[0].date;
 
@@ -64,7 +67,7 @@ export const makeService = (MaintenanceModel) => {
       if (element?.amount > 0 && date > thisMonth.getTime()) amount += element.amount;
     });
     response.spentMonthly = Number(amount.toFixed(2));
-    
+
     const lastMaintenance = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId }, { "createdAt": -1 }, 1);
     if (lastMaintenance.length > 0) {
       response.lastMaintenanceDate = lastMaintenance[0].createdAt;
@@ -106,4 +109,4 @@ export const makeService = (MaintenanceModel) => {
   }
 }
 
-export const maintenanceService = makeService({...makeMaintenanceRepository(MaintenanceModel)});
+export const maintenanceService = makeService({ ...makeMaintenanceRepository(MaintenanceModel) });
