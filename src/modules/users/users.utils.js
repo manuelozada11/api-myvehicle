@@ -13,6 +13,7 @@ const getCleanUser = (user) => {
     username: user.username,
     country: user.country,
     email: user.email,
+    picture: user.picture ?? null,
     integrations: _integrationMapper(user.integrations),
   }
 }
