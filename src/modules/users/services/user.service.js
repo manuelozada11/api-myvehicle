@@ -9,6 +9,28 @@ import { httpClient } from '../../../shared/infra/http/httpClient.js';
 import { config } from "../../../shared/config/config.js";
 
 export const makeService = (repository) => {
+  const regexValidation = (string, type, regex) => {
+    if (!string) return false;
+    switch (type) {
+      case "number":
+        regex = /\d/;
+        break;
+      case "uppercase":
+        regex = /[A-Z]/;
+        break;
+      case "lowercase":
+        regex = /^(?=.*[a-z]).+$/;
+        break;
+      case "username":
+        regex = /^[a-zA-Z0-9]+/;
+        break;
+      default:
+        regex = /^(?=.*\d)(?=.*[A-Z]).{8,}$/;
+        break;
+    }
+    return regex.test(string);
+  };
+
   const createUser = async ({ lang, password, name, lastname, username, email, ...fields }) => {
     let response = 1;
     if (fields.step === 1) {
@@ -37,8 +59,9 @@ export const makeService = (repository) => {
 
     response = await repository.createUser(user);
 
-    if (process.env?.EMAIL_KEY) {
-      const resend = new Resend(process.env.EMAIL_KEY);
+    const resendKey = config.resend?.api_key;
+    if (resendKey) {
+      const resend = new Resend(resendKey);
       const email = emailConstants.find(e => e.emailId === 1);
 
       const usrReduced = getCleanUser(response);
@@ -50,8 +73,8 @@ export const makeService = (repository) => {
       html = html.replace('{{btnName}}', email.btnName[lang] || '');
       html = html.replace('{{token}}', token);
 
-      resend.emails.send({
-        from: 'Taangi <onboarding@resend.dev>',
+      await resend.emails.send({
+        from: config.resend.from,
         to: user.email,
         subject: email.subject[lang],
         html
@@ -181,6 +204,80 @@ export const makeService = (repository) => {
       throw new Error('Error fetching athlete data from Strava');
     }
   }
+
+  const forgotPassword = async ({ email, lang }) => {
+    lang = lang || 'en';
+
+    // Check if the user exists
+    const user = await repository.getUserBy({ email });
+    if (!user) return { code: 404, message: 'user not found' };
+    
+    // Generate a reset token (simple random string, in production use a secure token)
+    const userReduced = getCleanUser(user);
+    const token = generateToken(userReduced); 
+    
+    const resendKey = config.resend?.api_key;
+    if (resendKey) {
+      const emailTemplate = emailConstants.find(e => e.emailId === 2);
+  
+      let html = emailTemplate.html;
+      html = html.replace('{{name}}', userReduced.name || '');
+      html = html.replace('{{body}}', emailTemplate.body[lang] || '');
+      html = html.replace('{{btnName}}', emailTemplate.btnName[lang] || '');
+      html = html.replace('{{token}}', token);
+
+      const resend = new Resend(resendKey);
+      await resend.emails.send({
+        from: config.resend.from,
+        to: user.email,
+        subject: emailTemplate.subject[lang],
+        html
+      });
+    }
+
+    return { code: 200, message: 'reset password email sent' };
+  };
+
+  const resetPassword = async ({ password, passwordConfirmation }, user) => {
+    try {
+      // Check if user exists
+      const foundUser = await repository.getUserById({ _id: user._id });
+      if (!foundUser) return { code: 404, message: 'user not found' };
+
+      // Validate password
+      if (password !== passwordConfirmation) {
+        return { code: 400, message: "passwords don't match" };
+      }
+
+      // Validate password format
+      if (password?.length < 8) {
+        return { code: 400, message: 'password must be at least 8 characters' };
+      }
+
+      if (!regexValidation(password, 'lowercase')) {
+        return { code: 400, message: 'password must contain at least one lowercase letter' };
+      }
+
+      if (!regexValidation(password, 'uppercase')) {
+        return { code: 400, message: 'password must contain at least one uppercase letter' };
+      }
+
+      if (!regexValidation(password, 'number')) {
+        return { code: 400, message: 'password must contain at least one number' };
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(password);
+
+      // Update user password
+      const result = await repository.updateUserById(foundUser._id, { password: hashedPassword });
+      if (!result) return { code: 404, message: 'user not found' };
+
+      return { code: 200, message: 'password reset successfully' };
+    } catch (error) {
+      throw error;
+    }
+  };
 
   // Private functions
   const _googleSignin = async (credentials) => {
@@ -330,7 +427,9 @@ export const makeService = (repository) => {
     createRateApp,
     addIntegration,
     activateUser,
-    getStravaAthlete
+    getStravaAthlete,
+    forgotPassword,
+    resetPassword
   }
 }
 

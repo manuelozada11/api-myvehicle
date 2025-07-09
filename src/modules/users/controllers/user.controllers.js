@@ -237,3 +237,37 @@ export const activateUser = async (req, res) => {
     defaultCatcher(e, res);
   }
 }
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email, lang } = _.pick(req.body, "email", "lang");
+
+    if (_.isEmpty(email)) return res.status(400).json({ code: 400, message: 'MISSING_EMAIL_FIELD' });
+
+    const { code, message } = await userService.forgotPassword({ email, lang });
+
+    return res.status(code).json({ code, message });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { credentials } = _.pick(req.headers, "credentials");
+
+    if (_.isEmpty(credentials)) return res.status(400).json({ code: 400, message: 'MISSING_CREDENTIALS_HEADER' });
+
+    const [password, passwordConfirmation] = Buffer.from(credentials, 'base64').toString('ascii').split(':');
+
+    if (_.isEmpty(password)) return res.status(400).json({ code: 400, message: 'MISSING_PASSWORD_FIELD' });
+    if (_.isEmpty(passwordConfirmation)) return res.status(400).json({ code: 400, message: 'MISSING_CONFIRM_PASSWORD_FIELD' });
+
+    const { code, message } = await userService.resetPassword({ password, passwordConfirmation }, req.user);
+
+    return res.status(code).json({ code, message });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+

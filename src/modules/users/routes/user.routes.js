@@ -1,7 +1,7 @@
 import express from "express";
 import { checkAuth } from '../../../shared/middlewares/checkAuth.js';
 import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser, createRateApp, googleSignin, addIntegration, 
-  activateUser
+  activateUser, forgotPassword, resetPassword
  } from "../controllers/user.controllers.js";
 
 const router = express.Router();
@@ -11,6 +11,8 @@ router
   .post('/activate', checkAuth, activateUser)
   .post('/auth/google', googleSignin)
   .post('/integration/:_id', addIntegration)
+  .post('/forgot-password', forgotPassword)
+  .post('/reset-password', checkAuth, resetPassword)
   .post("/:_id", checkAuth, updateUserPassword)
   .post("/:_id/rate", checkAuth, createRateApp)
 
