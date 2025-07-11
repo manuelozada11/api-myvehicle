@@ -178,28 +178,16 @@ export const makeService = (repository) => {
     return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
   }
 
-  const getStravaAthlete = async (userConfig) => {
+  const getStravaAthlete = async (userConfig, userId) => {
     try {
       // Validate the Strava token
-      userConfig = await _validateStravaToken(userConfig);
+      userConfig = await _validateStravaToken(userConfig, userId);
 
       const client = httpClient({ baseURL: `${config.strava.api_url}/api/v3`, headers: { Authorization: `Bearer ${userConfig.accessToken}` } });
       const response = await client.get(`/athlete`);
 
-      // TODO: validate if the athlete has bikes
-      // TODO: validate if the bike is already registered in their account
-
       return response.data;
     } catch (error) {
-      // if (error.status === 401) {
-      //   console.error("Strava token expired, refreshing...");
-
-      //   const refreshedToken = await _refreshStravaToken(userConfig);
-      //   userConfig.access_token = refreshedToken.access_token;
-
-      //   return _getAthlete(userConfig);
-      // }
-
       console.error("Error during Strava API call:", error);
       throw new Error('Error fetching athlete data from Strava');
     }
@@ -382,10 +370,10 @@ export const makeService = (repository) => {
     }
   }
 
-  const _validateStravaToken = async (stravaConfig) => {
+  const _validateStravaToken = async (stravaConfig, userId) => {
     if (stravaConfig.expiresAt && stravaConfig.expiresAt < Math.floor(Date.now() / 1000)) {
       console.log("Strava token expired, refreshing...");
-      stravaConfig = await _refreshStravaToken(stravaConfig, _id);
+      stravaConfig = await _refreshStravaToken(stravaConfig, userId);
     }
 
     return stravaConfig;

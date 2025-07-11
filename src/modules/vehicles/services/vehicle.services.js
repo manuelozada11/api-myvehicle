@@ -101,7 +101,7 @@ export const makeService = (VehicleModel) => {
     const userConfig = user.integrations.find(i => i.name === integration);
     if (!userConfig) return { code: 404, message: 'integration not found' };
 
-    const bikes = await _getAthleteBikes(userConfig);
+    const bikes = await _getAthleteBikes(userConfig, user?._id);
     if (!bikes.length) return { code: 404, message: 'no bikes found' };
 
     // check if vehicle already exists
@@ -142,8 +142,8 @@ export const makeService = (VehicleModel) => {
   }
 
   // Private Functions
-  const _getAthleteBikes = async (userConfig) => {
-    const athlete = await userService.getStravaAthlete(userConfig);
+  const _getAthleteBikes = async (userConfig, userId) => {
+    const athlete = await userService.getStravaAthlete(userConfig, userId);
     if (!athlete) return [];
 
     const bikes = athlete?.bikes;
