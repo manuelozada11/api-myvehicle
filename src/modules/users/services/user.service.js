@@ -33,12 +33,13 @@ export const makeService = (repository) => {
 
   const createUser = async ({ lang, password, name, lastname, username, email, ...fields }) => {
     let response = 1;
+    
     if (fields.step === 1) {
-      response = await repository.getUsers({ username: fields.username });
-      if (response?.length > 0) return { code: 400, message: 'USER_ALREADY_EXISTS' };
+      response = await repository.getUserBy({ username: username });
+      if (response) return { code: 400, message: 'USER_ALREADY_EXISTS' };
 
-      response = await repository.getUsers({ email: fields.email });
-      if (response?.length > 0) return { code: 400, message: 'EMAIL_ALREADY_IN_USE' };
+      response = await repository.getUserBy({ email: email });
+      if (response) return { code: 400, message: 'EMAIL_ALREADY_IN_USE' };
 
       return { code: 200, message: 'VALID_USER' };
     }
