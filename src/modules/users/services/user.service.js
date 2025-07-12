@@ -156,7 +156,7 @@ export const makeService = (repository) => {
 
     // we check if the user already has a Strava integration added
     const user = await repository.getUserBy({ _id, "integrations.name": "strava" });
-    if (user) return { code: 202, message: 'Integration already exists', name: 'strava' };
+    if (user) return { code: 202, message: 'Integration already exists', name: 'strava', user: getCleanUser(user) };
 
     const stravaConfig = await _exchangeCodeForToken(code);
 
