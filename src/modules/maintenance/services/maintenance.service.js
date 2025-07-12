@@ -35,48 +35,58 @@ export const makeService = (MaintenanceModel) => {
   }
 
   const getAllMaintenancesById = async ({ vehicleId, user, qty }) => {
-    const result = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": user._id }, { "createdAt": -1 }, qty);
+    const result = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": user._id }, { "date": -1 }, qty);
 
     if (result.length === 0) return { result: 404, response: "no maintenances found", payload: null };
     return { result: 200, response: "maintenances found", payload: result };
   }
 
   const getStatsByVehicle = async ({ vehicleId, userId }) => {
-    let response = {};
+    const response = {};
 
-    const thisYear = new Date();
-    thisYear.setMonth(0);
-    thisYear.setDate(1);
-    thisYear.setHours(0, 0, 0);
+    // Calcular fechas de inicio de año y mes actuales solo una vez
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
 
-    const quantity = await MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": userId, "createdAt": { "$gte": new Date(thisYear) } });
-    response.quantity = quantity.length;
+    // Ejecutar todas las consultas en paralelo para optimizar tiempos
+    const [
+      quantityMaintenances,
+      [batteryMaintenance],
+      [tiresMaintenance],
+      [lastMaintenance]
+    ] = await Promise.all([
+      MaintenanceModel.getMaintenances({ "vehicle._id": vehicleId, "user._id": userId, "date": { "$gte": startOfYear } }, { "date": -1 }),
+      MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "date": -1 }, 1),
+      MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "tires" }, { "date": -1 }, 1),
+      MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId }, { "date": -1 }, 1)
+    ]);
 
-    const battery = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "battery" }, { "date": -1 }, 1);
-    if (battery.length > 0) response.batteryDate = battery[0].date;
+    // Cantidad de mantenimientos este año
+    response.quantity = quantityMaintenances.length;
 
-    const tires = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId, "user._id": userId, "type": "tires" }, { "date": -1 }, 1);
-    if (tires.length > 0) response.tiresDate = tires[0].date;
+    // Última fecha de batería y llantas
+    if (batteryMaintenance) response.batteryDate = batteryMaintenance.date;
+    if (tiresMaintenance) response.tiresDate = tiresMaintenance.date;
 
-    const thisMonth = new Date();
-    thisMonth.setDate(1);
-    thisMonth.setHours(0, 0, 0);
-    let amount = 0;
-    quantity.forEach(element => {
-      const date = new Date(element.createdAt).getTime();
-      if (element?.amount > 0 && date > thisMonth.getTime()) amount += element.amount;
-    });
-    response.spentMonthly = Number(amount.toFixed(2));
+    // Calcular gasto mensual
+    response.spentMonthly = Number(
+      quantityMaintenances.reduce((acc, el) => {
+        const date = new Date(el.date);
+        if (el?.amount > 0 && date >= startOfMonth) {
+          return acc + el.amount;
+        }
+        return acc;
+      }, 0).toFixed(2)
+    );
 
-    const lastMaintenance = await MaintenanceModel.getMaintenancesLimit({ "vehicle._id": vehicleId }, { "createdAt": -1 }, 1);
-    if (lastMaintenance.length > 0) {
-      response.lastMaintenanceDate = lastMaintenance[0].createdAt;
-      const nextMaintYear = new Date(lastMaintenance[0].createdAt).getFullYear() + 1;
-      const nextMaintDate = new Date(new Date().setFullYear(nextMaintYear));
+    // Último mantenimiento y próximo mantenimiento
+    if (!lastMaintenance) return { result: 404, response: "no maintenances found", stats: null }; 
+      response.lastMaintenanceDate = lastMaintenance.date;
+      const lastDate = new Date(lastMaintenance.date);
+      const nextMaintDate = new Date(lastDate);
+      nextMaintDate.setFullYear(lastDate.getFullYear() + 1);
       response.nextMaintenanceDate = nextMaintDate;
-    }
-    // console.log("lastMaintenance", lastMaintenance)
-    if (lastMaintenance.length === 0) return { result: 404, response: "no maintenances found", stats: null };
 
     return {
       result: 200,

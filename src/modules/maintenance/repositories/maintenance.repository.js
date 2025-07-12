@@ -1,7 +1,7 @@
 export const makeRepository = (MaintenanceModel) => {
     const create = (fields) => MaintenanceModel.create(fields);
 
-    const getMaintenances = (filters) => MaintenanceModel.find(filters);
+    const getMaintenances = (filters, sort, limit) => MaintenanceModel.find(filters).sort(sort).limit(limit);
     
     const getMaintenancesLimit = (filters, sort, limit) => MaintenanceModel.find(filters).sort(sort).limit(limit);
 
