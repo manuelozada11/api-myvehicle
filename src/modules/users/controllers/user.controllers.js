@@ -281,7 +281,14 @@ export const getUserNotifications = async (req, res) => {
     const user = await userService.getUserById({ _id });
     if (!user) return res.status(404).json({ code: 404, message: 'USER_NOT_FOUND' });
     
-    return res.status(200).json({ code: 200, notifications: user.notifications });
+    // Ordenar notificaciones por fecha de creación (más recientes primero) y limitar a 10
+    const sortedNotifications = user.notifications
+      .sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      })
+      .slice(0, 10);
+    
+    return res.status(200).json({ code: 200, notifications: sortedNotifications });
   } catch (e) {
     defaultCatcher(e, res);
   }
