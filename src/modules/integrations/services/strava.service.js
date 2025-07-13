@@ -3,8 +3,10 @@ import { vehicleService } from "../../vehicles/services/vehicle.services.js";
 import { httpClient } from '../../../shared/infra/http/httpClient.js';
 import { config } from '../../../shared/config/config.js';
 import { notificationConstants } from '../../../shared/constants/notifications.constants.js';
+import { makeRepository } from '../../../modules/users/repositories/user.repository.js';
+import { UserModel } from '../../users/models/user.model.js';
 
-const makeService = () => {
+const makeService = (repository) => {
   const client = httpClient({ baseURL: config.strava.api_url });
 
   const handleActivity = async (event) => {
@@ -23,7 +25,10 @@ const makeService = () => {
     const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
     if (!bikes.length) return;
 
-    // add mileage to vehicle
+    // check if activity is a deletion
+    const isDeletion = event.aspect_type === 'delete';
+
+    // add or subtract mileage to vehicle
     if (activityDetails.gear.converted_distance) {
       const updatedVehicle = await vehicleService.updateVehicle({
         userId: stravaConfig.user._id?.toString(),
@@ -34,7 +39,7 @@ const makeService = () => {
       // add notification to user telling that the vehicle was updated
       const distance = (activityDetails.distance / 1000).toFixed(2);
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
-      const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
+      const message = notificationConstants.find(n => n.notificationId === isDeletion ? 2 : 1).message[lang];
       const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
@@ -70,7 +75,7 @@ const makeService = () => {
       const response = await client.post('/oauth/token', params);
 
       // Update the user's integration with the new access token
-      const dbconfig = await repository.updateUserBy({ _id: stravaConfig.user._id, "integrations.name": "strava" }, {
+      const dbconfig = await repository.updateUserBy({ _id: stravaConfig.user._id?.toString(), "integrations.name": "strava" }, {
         $set: {
           "integrations.$.refreshToken": response.data.refresh_token,
           "integrations.$.accessToken": response.data.access_token,
@@ -120,4 +125,4 @@ const makeService = () => {
   }
 }
 
-export const stravaService = makeService(); 
+export const stravaService = makeService({ ...makeRepository(UserModel) }); 
