@@ -273,11 +273,9 @@ export const makeService = (repository) => {
 
   const markNotificationAsRead = async ({ _id, notificationId }) => {
     try {
-      const result = await repository.updateUserById(_id, {
-        $set: { "notifications.$[elem].read": true }
-      }, {
-        arrayFilters: [{ "elem._id": notificationId }]
-      });
+      const result = await repository.updateUserBy(
+        { _id, "notifications._id": notificationId }, 
+        { $set: { "notifications.$.read": true } });
 
       if (!result) return { code: 404, message: 'user not found' };
 
