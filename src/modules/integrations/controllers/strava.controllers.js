@@ -14,7 +14,7 @@ export const verifyChallenge = async (req, res) => {
     if (!challenge) return res.status(400).json({ code: 400, message: 'missing challenge field' });
 
     if (mode === 'subscribe' && token === config.strava.verify_token) {
-      return res.status(200).json({ hub: { challenge } });
+      return res.status(200).json({ "hub.challenge": challenge });
     }
 
     return res.status(400).json({ code: 400, message: 'invalid mode or token' });
