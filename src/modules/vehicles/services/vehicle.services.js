@@ -61,6 +61,7 @@ export const makeService = (VehicleModel) => {
         plateNumber: vehicle.plateNumber,
         model: vehicle.vehicleType === 'bicycle' ? vehicle.model : undefined,
         vehicleType: vehicle.vehicleType,
+        displacement: vehicle.displacement
       }
     });
 
