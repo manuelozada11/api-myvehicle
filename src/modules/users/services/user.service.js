@@ -55,7 +55,8 @@ export const makeService = (repository) => {
       password: hashed,
       role: "customer",
       notifications: [],
-      integrations: []
+      integrations: [],
+      language: lang
     }
 
     response = await repository.createUser(user);
@@ -111,10 +112,12 @@ export const makeService = (repository) => {
     return usr
   }
 
-  const getUsers = async (filter) => {
+  const getUsers = async (filter, noReduced = false) => {
     const users = await repository.getUsers(filter);
 
     if (!users.length) return [];
+
+    if (noReduced) return users;
 
     const uResponse = users.map(user => {
       return {
@@ -158,7 +161,19 @@ export const makeService = (repository) => {
     const user = await repository.getUserBy({ _id, "integrations.name": "strava" });
     if (user) return { code: 202, message: 'Integration already exists', name: 'strava', user: getCleanUser(user) };
 
-    const stravaConfig = await _exchangeCodeForToken(code);
+    const athleteToken = await _exchangeCodeForToken(code);
+    
+    const stravaConfig = {
+      name: "strava",
+      user: { _id },
+      userId: athleteToken.athlete.id,
+      refreshToken: athleteToken.refresh_token,
+      accessToken: athleteToken.access_token,
+      expiresAt: athleteToken.expires_at,
+      tokenType: athleteToken.token_type,
+      scope: "read,activity:read,activity:read_all,profile:read_all",
+      metadata: JSON.stringify(athleteToken.athlete) // Store athlete data as metadata
+    };
 
     // we create the integration in our database
     const result = await repository.updateUserById(_id, { $push: { integrations: stravaConfig } });
@@ -179,10 +194,10 @@ export const makeService = (repository) => {
     return { code: 200, message: 'USER_ACTIVATED_SUCCESSFULLY' };
   }
 
-  const getStravaAthlete = async (userConfig, userId) => {
+  const getStravaAthlete = async (userConfig) => {
     try {
       // Validate the Strava token
-      userConfig = await _validateStravaToken(userConfig, userId);
+      userConfig = await _validateStravaToken(userConfig);
 
       const client = httpClient({ baseURL: `${config.strava.api_url}/api/v3`, headers: { Authorization: `Bearer ${userConfig.accessToken}` } });
       const response = await client.get(`/athlete`);
@@ -268,6 +283,13 @@ export const makeService = (repository) => {
     }
   };
 
+  const addNotification = async ({ _id, ...body }) => {
+    const result = await repository.updateUserById(_id, { $push: { notifications: { message: body.message } } });
+    if (!result) return { code: 404, message: 'user not found' };
+
+    return { code: 200, message: 'notification added successfully' };
+  }
+
   // Private functions
   const _googleSignin = async (credentials) => {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -323,27 +345,16 @@ export const makeService = (repository) => {
 
       // if so, we proceed to exchange the code for an access token
       const response = await client.post('/oauth/token', params);
-      if (response.status > 200) return { code: 500, message: 'Error during Strava API call' };
+      if (response.status > 200) throw new Error('Error exchanging code for Strava token');
 
-      const athleteToken = response.data;
-      const stravaConfig = {
-        name: "strava",
-        refreshToken: athleteToken.refresh_token,
-        accessToken: athleteToken.access_token,
-        expiresAt: athleteToken.expires_at,
-        tokenType: athleteToken.token_type,
-        scope: "read,profile:read_all",
-        metadata: JSON.stringify(athleteToken.athlete) // Store athlete data as metadata
-      };
-
-      return stravaConfig;
+      return response.data;
     } catch (error) {
       console.error("Error during Strava API call:", error);
       throw new Error('Error exchanging code for Strava token');
     }
   }
 
-  const _refreshStravaToken = async (stravaConfig, userId) => {
+  const _refreshStravaToken = async (stravaConfig) => {
     try {
       const params = {
         client_id: config.strava.clientId,
@@ -356,7 +367,7 @@ export const makeService = (repository) => {
       const response = await client.post('/oauth/token', params);
 
       // Update the user's integration with the new access token
-      const dbconfig = await repository.updateUserBy({ _id: userId, "integrations.name": "strava" }, {
+      const dbconfig = await repository.updateUserBy({ _id: stravaConfig.user._id, "integrations.name": "strava" }, {
         $set: {
           "integrations.$.refreshToken": response.data.refresh_token,
           "integrations.$.accessToken": response.data.access_token,
@@ -371,10 +382,10 @@ export const makeService = (repository) => {
     }
   }
 
-  const _validateStravaToken = async (stravaConfig, userId) => {
+  const _validateStravaToken = async (stravaConfig) => {
     if (stravaConfig.expiresAt && stravaConfig.expiresAt < Math.floor(Date.now() / 1000)) {
       console.log("Strava token expired, refreshing...");
-      stravaConfig = await _refreshStravaToken(stravaConfig, userId);
+      stravaConfig = await _refreshStravaToken(stravaConfig);
     }
 
     return stravaConfig;
@@ -418,7 +429,8 @@ export const makeService = (repository) => {
     activateUser,
     getStravaAthlete,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    addNotification
   }
 }
 

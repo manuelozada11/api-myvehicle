@@ -17,12 +17,17 @@ const userSchema = new mongoose.Schema({
         updatedAt: { type: Date, default: Date.now }
     },
     notifications: [ {
-        _id: { type: mongoose.Types.ObjectId, required: true },
         message: { type: String, required: true },
-        priority: { type: Boolean }
+        priority: { type: Boolean },
+        createdAt: { type: Date, default: Date.now },
+        read: { type: Boolean, default: false }
     } ],
     integrations: [ {
+        user: {
+            _id: { type: mongoose.Types.ObjectId, required: true }
+        },
         name: { type: String, required: true },
+        userId: { type: String, required: true },
         refreshToken: { type: String, required: true },
         tokenType: { type: String }, // Optional field for token type
         accessToken: { type: String },
@@ -32,7 +37,8 @@ const userSchema = new mongoose.Schema({
         state: { type: String },
         status: { type: Boolean, default: true }, // Optional field for integration status
         metadata: { type: String } // Optional field for additional metadata
-    } ]
+    } ],
+    language: { type: String, default: 'es' }
 }, { timestamps: true })
 
 export const UserModel = mongoose.model('User', userSchema)

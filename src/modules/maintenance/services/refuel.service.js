@@ -1,4 +1,4 @@
-import { vehicleService } from "../../vehicles/services/index.js";
+import { vehicleService } from "../../vehicles/services/vehicle.services.js";
 
 export const makeService = (RefuelModel) => {
     const createRefuel = async ({ date = new Date, amount, quantity, gasStation, ...data }) => {

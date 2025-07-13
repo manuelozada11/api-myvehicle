@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { maintenanceService } from '../../maintenance/services/maintenance.service.js';
 import { userService } from '../../users/services/user.service.js';
+import { VehicleModel } from "../models/index.js";
+import { makeVehicleRepository } from "../repositories/index.js";
 
 export const makeService = (VehicleModel) => {
   const createVehicle = async ({ user, ...data }) => {
@@ -27,6 +29,26 @@ export const makeService = (VehicleModel) => {
 
   const getVehiclesByUser = async ({ _id }) => {
     const vehicles = await VehicleModel.getVehicles({ "user._id": mongoose.Types.ObjectId(_id) });
+
+    if (!vehicles.length) return [];
+
+    const vcResponse = vehicles.map(vehicle => {
+      const fullname = `${vehicle.manufacture} ${vehicle.model}`;
+      return {
+        _id: vehicle._id,
+        user: vehicle.user,
+        fullname: vehicle.vehicleType === 'bicycle' ? vehicle.manufacture : fullname,
+        plateNumber: vehicle.plateNumber,
+        model: vehicle.vehicleType === 'bicycle' ? vehicle.model : undefined,
+        vehicleType: vehicle.vehicleType,
+      }
+    });
+
+    return vcResponse;
+  }
+
+  const getVehiclesBy = async (filter) => {
+    const vehicles = await VehicleModel.getVehicles(filter);
 
     if (!vehicles.length) return [];
 
@@ -101,7 +123,7 @@ export const makeService = (VehicleModel) => {
     const userConfig = user.integrations.find(i => i.name === integration);
     if (!userConfig) return { code: 404, message: 'integration not found' };
 
-    const bikes = await _getAthleteBikes(userConfig, user?._id);
+    const bikes = await _getAthleteBikes(userConfig);
     if (!bikes.length) return { code: 404, message: 'no bikes found' };
 
     // check if vehicle already exists
@@ -142,8 +164,8 @@ export const makeService = (VehicleModel) => {
   }
 
   // Private Functions
-  const _getAthleteBikes = async (userConfig, userId) => {
-    const athlete = await userService.getStravaAthlete(userConfig, userId);
+  const _getAthleteBikes = async (userConfig) => {
+    const athlete = await userService.getStravaAthlete(userConfig);
     if (!athlete) return [];
 
     const bikes = athlete?.bikes;
@@ -161,6 +183,7 @@ export const makeService = (VehicleModel) => {
     getVehicleById,
     getVehicleInfoById,
     getVehiclesByUser,
+    getVehiclesBy,
     updateVehicle,
     deleteVehicle,
     transferVehicle,
@@ -168,3 +191,6 @@ export const makeService = (VehicleModel) => {
     connectIntegration
   }
 }
+
+
+export const vehicleService = makeService({ ...makeVehicleRepository(VehicleModel) });

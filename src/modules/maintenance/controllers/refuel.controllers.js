@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import { refuelService } from '../services/index.js';
 import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
-import { vehicleService } from '../../vehicles/services/index.js';
+import { vehicleService } from '../../vehicles/services/vehicle.services.js';
 
 export const createRefuel = async (req, res) => {
     try {

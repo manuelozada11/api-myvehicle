@@ -1,4 +1,4 @@
-import { vehicleService } from '../../vehicles/services/index.js';
+import { vehicleService } from '../../vehicles/services/vehicle.services.js';
 import { MaintenanceModel } from '../models/index.js'
 import { makeMaintenanceRepository } from '../repositories/index.js'
 

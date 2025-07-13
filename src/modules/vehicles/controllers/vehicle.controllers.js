@@ -1,4 +1,4 @@
-import { vehicleService } from "../services/index.js";
+import { vehicleService } from "../services/vehicle.services.js";
 import { defaultCatcher } from '../../../shared/config/defaultCatcher.js';
 import _ from 'lodash';
 
