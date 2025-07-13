@@ -30,14 +30,14 @@ const makeService = (repository) => {
 
     // add or subtract mileage to vehicle
     if (activityDetails.gear.converted_distance) {
+      const distance = (activityDetails.distance / 1000).toFixed(2);
       const updatedVehicle = await vehicleService.updateVehicle({
         userId: stravaConfig.user._id?.toString(),
         vehicleId: bikes[0]._id,
-        displacement: activityDetails.gear.converted_distance
+        displacement: bikes[0].displacement + distance
       });
 
       // add notification to user telling that the vehicle was updated
-      const distance = (activityDetails.distance / 1000).toFixed(2);
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === isDeletion ? 2 : 1).message[lang];
       const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance).replace('{mileage}', updatedVehicle.displacement);
