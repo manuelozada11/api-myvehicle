@@ -273,3 +273,32 @@ export const resetPassword = async (req, res) => {
   }
 }
 
+export const getUserNotifications = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    if (!_id) return res.status(400).json({ code: 400, message: 'MISSING_USER_ID' });
+
+    const user = await userService.getUserById({ _id });
+    if (!user) return res.status(404).json({ code: 404, message: 'USER_NOT_FOUND' });
+    
+    return res.status(200).json({ code: 200, notifications: user.notifications });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+
+export const markNotificationsAsRead = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { notificationId } = req.body;
+    
+    if (!_id) return res.status(400).json({ code: 400, message: 'MISSING_USER_ID' });
+    if (notificationId === undefined) return res.status(400).json({ code: 400, message: 'MISSING_NOTIFICATION_ID' });
+    
+    const { code, message } = await userService.markNotificationAsRead({ _id, notificationId });
+    return res.status(code).json({ code, message });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+

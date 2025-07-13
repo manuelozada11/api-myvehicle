@@ -255,35 +255,38 @@ export const makeService = (repository) => {
         return { code: 400, message: "passwords don't match" };
       }
 
-      // Validate password format
-      if (password?.length < 8) {
-        return { code: 400, message: 'password must be at least 8 characters' };
+      if (!regexValidation(password, "password")) {
+        return { code: 400, message: "password doesn't meet requirements" };
       }
 
-      if (!regexValidation(password, 'lowercase')) {
-        return { code: 400, message: 'password must contain at least one lowercase letter' };
-      }
+      const hashed = await hashPassword(password);
+      const result = await repository.updateUserById(user._id, { password: hashed });
 
-      if (!regexValidation(password, 'uppercase')) {
-        return { code: 400, message: 'password must contain at least one uppercase letter' };
-      }
-
-      if (!regexValidation(password, 'number')) {
-        return { code: 400, message: 'password must contain at least one number' };
-      }
-
-      // Hash the new password
-      const hashedPassword = await hashPassword(password);
-
-      // Update user password
-      const result = await repository.updateUserById(foundUser._id, { password: hashedPassword });
       if (!result) return { code: 404, message: 'user not found' };
 
       return { code: 200, message: 'password reset successfully' };
     } catch (error) {
-      throw error;
+      console.error("Error resetting password:", error);
+      return { code: 500, message: 'error resetting password' };
     }
-  };
+  }
+
+  const markNotificationAsRead = async ({ _id, notificationId }) => {
+    try {
+      const result = await repository.updateUserById(_id, {
+        $set: { "notifications.$[elem].read": true }
+      }, {
+        arrayFilters: [{ "elem._id": notificationId }]
+      });
+
+      if (!result) return { code: 404, message: 'user not found' };
+
+      return { code: 200, message: 'notification marked as read' };
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return { code: 500, message: 'error marking notification as read' };
+    }
+  }
 
   const addNotification = async ({ _id, ...body }) => {
     const result = await repository.updateUserById(_id, { $push: { notifications: { message: body.message } } });
@@ -433,7 +436,8 @@ export const makeService = (repository) => {
     getStravaAthlete,
     forgotPassword,
     resetPassword,
-    addNotification
+    addNotification,
+    markNotificationAsRead
   }
 }
 

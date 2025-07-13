@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
         updatedAt: { type: Date, default: Date.now }
     },
     notifications: [ {
+        _id: { type: mongoose.Types.ObjectId, default: mongoose.Types.ObjectId },
         message: { type: String, required: true },
         priority: { type: Boolean },
         createdAt: { type: Date, default: Date.now },
