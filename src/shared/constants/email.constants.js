@@ -5,6 +5,10 @@ export const emailConstants = [
       en: 'Welcome to Taangi!',
       es: '¡Bienvenido a Taangi!'
     },
+    title: {
+      en: "Hey",
+      es: "Hola"
+    },
     body: {
       en: `We're happy to have you on board! Please click the button below to activate your account`,
       es: `¡Estamos felices de tenerte con nosotros! Por favor, haz clic en el botón de abajo para activar tu cuenta`
@@ -151,7 +155,7 @@ export const emailConstants = [
           <!-- Content Section -->
           <tr>
             <td class="content" align="center">
-              <h1>Hey {{name}},</h1>
+              <h1>{{title}} {{name}},</h1>
               <p>{{body}}</p>
 
               <!-- Nuevo botón -->
@@ -177,6 +181,10 @@ export const emailConstants = [
     subject: {
       en: 'Reset your password',
       es: 'Restablecer tu contraseña'
+    },
+    title: {
+      en: "Hey",
+      es: "Hola"
     },
     body: {
       en: `It looks like you requested a password reset. Please click the button below to set a new password.`,
@@ -291,7 +299,7 @@ export const emailConstants = [
           <!-- Content Section -->
           <tr>
             <td class="content" align="center">
-              <h1>Hi {{name}},</h1>
+              <h1>{{title}} {{name}},</h1>
               <p>{{body}}</p>
 
               <!-- Reset password button -->

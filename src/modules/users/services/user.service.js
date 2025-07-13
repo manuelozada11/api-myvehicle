@@ -70,7 +70,8 @@ export const makeService = (repository) => {
       const token = generateToken(usrReduced);
 
       let html = email.html;
-      html = html.replace('{{name}}', user?.name || '');
+      html = html.replace('{{title}}', email.title[lang] || '');
+      html = html.replace('{{name}}', firstLetterUppercase(user?.name) || '');
       html = html.replace('{{body}}', email.body[lang] || '');
       html = html.replace('{{btnName}}', email.btnName[lang] || '');
       html = html.replace('{{token}}', token);
@@ -86,8 +87,8 @@ export const makeService = (repository) => {
     return { code: 200, message: 'USER_CREATED_SUCCESSFULLY' };
   }
 
-  const userSignIn = async ({ usr, pwd, googleToken }) => {
-    if (googleToken) return await _googleSignin(googleToken);
+  const userSignIn = async ({ usr, pwd, googleToken, lang }) => {
+    if (googleToken) return await _googleSignin(googleToken, lang);
 
     const user = await repository.userSignIn({ username: usr });
     if (!user) return { code: 404, message: "USER_NOT_FOUND" };
@@ -225,7 +226,8 @@ export const makeService = (repository) => {
       const emailTemplate = emailConstants.find(e => e.emailId === 2);
   
       let html = emailTemplate.html;
-      html = html.replace('{{name}}', userReduced.name || '');
+      html = html.replace('{{title}}', emailTemplate.title[lang] || '');
+      html = html.replace('{{name}}', firstLetterUppercase(userReduced.name) || '');
       html = html.replace('{{body}}', emailTemplate.body[lang] || '');
       html = html.replace('{{btnName}}', emailTemplate.btnName[lang] || '');
       html = html.replace('{{token}}', token);
@@ -291,7 +293,7 @@ export const makeService = (repository) => {
   }
 
   // Private functions
-  const _googleSignin = async (credentials) => {
+  const _googleSignin = async (credentials, lang) => {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: credentials,
@@ -313,7 +315,8 @@ export const makeService = (repository) => {
         status: true,
         notifications: [],
         integrations: [],
-        picture
+        picture,
+        language: lang
       }
 
       user = await repository.createUser(basicUser);
