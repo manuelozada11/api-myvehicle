@@ -42,7 +42,7 @@ const makeService = (repository) => {
       // add notification to user telling that the vehicle was updated
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === isDeletion ? 2 : 1).message[lang];
-      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance).replace('{mileage}', updatedVehicle.displacement);
+      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
   }
