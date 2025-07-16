@@ -3,8 +3,10 @@ import { vehicleService } from "../../vehicles/services/vehicle.services.js";
 import { httpClient } from '../../../shared/infra/http/httpClient.js';
 import { config } from '../../../shared/config/config.js';
 import { notificationConstants } from '../../../shared/constants/notifications.constants.js';
-import { makeRepository } from '../../../modules/users/repositories/user.repository.js';
+import { makeRepository as makeUserRepo } from '../../../modules/users/repositories/user.repository.js';
+import { makeRepository as makeIntegrationsRepo } from '../repositories/activities.repository.js';
 import { UserModel } from '../../users/models/user.model.js';
+import { ActivitiesModel } from "../models/activities.model.js";
 
 const makeService = (repository) => {
   const client = httpClient({ baseURL: config.strava.api_url });
@@ -13,7 +15,11 @@ const makeService = (repository) => {
     // get user
     const stravaConfig = await _getStravaConfigBy({ userExtId: event.owner_id });
     if (!stravaConfig) return;
-    
+
+    // validate if there was saved in our database
+    const integration = await repository.verifyAndSaveActivity({ ...event, integrationName: "strava" });
+    if (integration?.distance > 0) return;
+
     // get activity details
     const activityDetails = await getStravaActivityById(stravaConfig, event.object_id);
     if (!activityDetails) return;
@@ -25,13 +31,21 @@ const makeService = (repository) => {
     const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
     if (!bikes.length) return;
 
+    // update activity with distance
+    const ourActivity = repository.buildActivity(activityDetails, "strava");
+    const updatedActivity = await repository.updateActivity(ourActivity);
+    if (!updatedActivity) return;
+
     // check if activity is a deletion
     const isDeletion = event.aspect_type === 'delete';
 
-    // add or subtract mileage to vehicle
     if (activityDetails.gear.converted_distance) {
+      // delete activity from our database if it's a deletion
+      if (isDeletion) await repository.deleteActivity(ourActivity);
+
+      // add or subtract mileage to vehicle
       const distance = activityDetails.distance / 1000;
-      const currentMileage = Number((bikes[0].displacement + distance).toFixed(2));
+      const currentMileage = Number((isDeletion ? bikes[0].displacement - distance : bikes[0].displacement + distance).toFixed(2));
 
       const updatedVehicle = await vehicleService.updateVehicle({
         userId: stravaConfig.user._id?.toString(),
@@ -117,14 +131,9 @@ const makeService = (repository) => {
     return stravaConfig;
   }
 
-  const _getUserLanguage = async (userId) => {
-    const user = await userService.getUserById({ _id: userId });
-    return user.language;
-  }
-
   return {
     handleActivity
   }
 }
 
-export const stravaService = makeService({ ...makeRepository(UserModel) }); 
+export const stravaService = makeService({ ...makeUserRepo(UserModel), ...makeIntegrationsRepo(ActivitiesModel) }); 
