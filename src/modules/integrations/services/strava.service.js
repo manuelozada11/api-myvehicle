@@ -17,7 +17,7 @@ const makeService = (repository) => {
     if (!stravaConfig) return;
 
     // validate if there was saved in our database
-    const localActivity = await repository.verifyAndSaveActivity({ ...event, integrationName: "strava" });
+    const localActivity = await _verifyAndSaveActivity({ ...event, integrationName: "strava" });
     if (localActivity?.distance > 0) return;
 
     // check if activity is a deletion
@@ -165,6 +165,16 @@ const makeService = (repository) => {
     if (!stravaConfig) return;
 
     return stravaConfig;
+  }
+
+  const _verifyAndSaveActivity = async (activity) => {
+    const ourActivity = repository.buildActivity(activity, activity.integrationName);
+    if (!ourActivity) return null;
+
+    const existingActivity = await repository.getActivityByExtId(ourActivity);
+    if (existingActivity) return existingActivity;
+
+    return await repository.createActivity(ourActivity);
   }
 
   return {

@@ -1,31 +1,18 @@
 export const makeRepository = (ActivitiesModel) => {
   const createActivity = async (data) => {
-    return await ActivitiesModel.create(data, { new: true });
+    return ActivitiesModel.create(data);
   }
 
   const getActivityByExtId = async ({ userExtId, activityId, integrationName }) => {
-    return await ActivitiesModel.findOne({ userExtId, activityId, integrationName });
-  }
-
-  const verifyAndSaveActivity = async (activity) => {
-    const ourActivity = buildActivity(activity, activity.integrationName);
-    if (!ourActivity) return null;
-
-    const existingActivity = await getActivityByExtId(ourActivity);
-    if (existingActivity) return existingActivity;
-
-    return await createActivity(ourActivity);
+    return ActivitiesModel.findOne({ userExtId, activityId, integrationName });
   }
 
   const updateActivity = async (activity) => {
-    const updated = await ActivitiesModel.findOneAndUpdate({ activityId: activity.activityId }, activity, { new: true });
-    if (!updated) return null;
-
-    return updated;
+    return ActivitiesModel.findOneAndUpdate({ activityId: activity.activityId }, activity, { new: true });
   }
 
   const deleteActivity = async (activity) => {
-    await ActivitiesModel.findOneAndDelete({ activityId: activity.activityId });
+    ActivitiesModel.findOneAndDelete({ activityId: activity.activityId });
   }
 
   const buildActivity = (event, integrationName) => {
@@ -44,7 +31,8 @@ export const makeRepository = (ActivitiesModel) => {
   }
 
   return {
-    verifyAndSaveActivity,
+    createActivity,
+    getActivityByExtId,
     updateActivity,
     deleteActivity,
     buildActivity
