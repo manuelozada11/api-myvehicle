@@ -32,7 +32,7 @@ const makeService = (repository) => {
     if (!bikes.length) return;
 
     // update activity with distance
-    const ourActivity = repository.buildActivity(activityDetails, "strava");
+    const ourActivity = await repository.buildActivity(activityDetails, "strava");
     const updatedActivity = await repository.updateActivity(ourActivity);
     if (!updatedActivity) return;
 
@@ -76,6 +76,11 @@ const makeService = (repository) => {
       console.log("error getting strava activity. status: ", error.status, "data: ", error.data, "message: ", error.message);
       return null;
     }
+  }
+
+  const _getUserLanguage = async (userId) => {
+    const user = await userService.getUserById({ _id: userId });
+    return user.language;
   }
 
   // Private functions
