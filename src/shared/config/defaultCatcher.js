@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node';
 
 export const defaultCatcher = (e, res) => {
     console.error('-------------- default catcher');
-    console.log(e?.message ?? 'No message provided');
+    console.log(e ?? 'No message provided');
     Sentry.captureException(e);
 
     if (res) {
