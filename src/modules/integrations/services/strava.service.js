@@ -17,51 +17,22 @@ const makeService = (repository) => {
     if (!stravaConfig) return;
 
     // validate if there was saved in our database
-    const integration = await repository.verifyAndSaveActivity({ ...event, integrationName: "strava" });
-    if (integration?.distance > 0) return;
-
-    // get activity details
-    const activityDetails = await getStravaActivityById(stravaConfig, event.object_id);
-    if (!activityDetails) return;
-
-    // check if activity is a ride
-    if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
-
-    // find vehicle by gear id
-    const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
-    if (!bikes.length) return;
-
-    // update activity with distance
-    const ourActivity = await repository.buildActivity(activityDetails, "strava");
-    const updatedActivity = await repository.updateActivity(ourActivity);
-    if (!updatedActivity) return;
+    const localActivity = await repository.verifyAndSaveActivity({ ...event, integrationName: "strava" });
+    if (localActivity?.distance > 0) return;
 
     // check if activity is a deletion
     const isDeletion = event.aspect_type === 'delete';
-
-    if (activityDetails.gear.converted_distance) {
-      // delete activity from our database if it's a deletion
-      if (isDeletion) await repository.deleteActivity(ourActivity);
-
-      // add or subtract mileage to vehicle
-      const distance = activityDetails.distance / 1000;
-      const currentMileage = Number((isDeletion ? bikes[0].displacement - distance : bikes[0].displacement + distance).toFixed(2));
-
-      const updatedVehicle = await vehicleService.updateVehicle({
-        userId: stravaConfig.user._id?.toString(),
-        vehicleId: bikes[0]._id,
-        displacement: currentMileage
-      });
-
-      // add notification to user telling that the vehicle was updated
-      const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
-      const message = notificationConstants.find(n => n.notificationId === isDeletion ? 2 : 1).message[lang];
-      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
-      await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
+    if (isDeletion) {
+      await _deleteActivity(localActivity, stravaConfig);
+      return;
     }
+
+    await _createActivity(event, stravaConfig);
+    return;
   }
 
-  const getStravaActivityById = async (stravaConfig, activityId) => {
+  // Private functions
+  const _getStravaActivityById = async (stravaConfig, activityId) => {
     try {
       // validate token
       const validatedConfig = await _validateStravaToken(stravaConfig);
@@ -77,13 +48,73 @@ const makeService = (repository) => {
       return null;
     }
   }
+  
+  const _createActivity = async (event, stravaConfig) => {
+    // get activity details
+    const activityDetails = await _getStravaActivityById(stravaConfig, event.object_id);
+    if (!activityDetails) return;
+
+    // check if activity is a ride
+    if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
+
+    // find vehicle by gear id
+    const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
+    if (!bikes.length) return;
+
+    // update activity with distance
+    const ourActivity = await repository.buildActivity(activityDetails, "strava");
+    const updatedActivity = await repository.updateActivity(ourActivity);
+    if (!updatedActivity) return;
+
+    if (activityDetails.gear.converted_distance) {
+      // add or subtract mileage to vehicle
+      const distance = activityDetails.distance / 1000;
+      const currentMileage = Number((bikes[0].displacement + distance).toFixed(2));
+
+      const updatedVehicle = await vehicleService.updateVehicle({
+        userId: stravaConfig.user._id?.toString(),
+        vehicleId: bikes[0]._id,
+        displacement: currentMileage
+      });
+
+      // add notification to user telling that the vehicle was updated
+      const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
+      const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
+      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+      await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
+    }
+  }
+
+  const _deleteActivity = async (activity, stravaConfig) => {
+    // delete activity from our database
+    await repository.deleteActivity(activity);
+    
+    // find vehicle by gear id
+    const bikes = await vehicleService.getVehiclesBy({ "extId": activity.gear_id });
+    if (!bikes.length) return;
+
+    // add or subtract mileage to vehicle
+    const distance = activity.distance / 1000;
+    const currentMileage = Number((bikes[0].displacement - distance).toFixed(2));
+
+    const updatedVehicle = await vehicleService.updateVehicle({
+      userId: stravaConfig.user._id?.toString(),
+      vehicleId: bikes[0]._id,
+      displacement: currentMileage
+    });
+
+    // add notification to user telling that the vehicle was updated
+    const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
+    const message = notificationConstants.find(n => n.notificationId === 2).message[lang];
+    const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+    await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
+  }
 
   const _getUserLanguage = async (userId) => {
     const user = await userService.getUserById({ _id: userId });
     return user.language;
   }
 
-  // Private functions
   const _refreshStravaToken = async (stravaConfig) => {
     try {
       const params = {
