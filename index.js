@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import { setupServer, startServer } from './src/shared/infra/http/server.js';
 import { makeMaintenanceModule, makeUsersModule, makeVehicleModule, makeIntegrationsModule } from './src/modules/index.js';
-import { varValidates } from './src/shared/config/validation.js';
 import { dbConnect } from './src/shared/infra/database/database.js';
 import { defaultCatcher } from './src/shared/config/defaultCatcher.js';
 import * as Sentry from '@sentry/node';
@@ -13,7 +12,6 @@ Sentry.init({
 });
 
 try {
-    varValidates();
     const server = setupServer();
 
     makeMaintenanceModule(server);
