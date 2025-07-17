@@ -12,7 +12,7 @@ export const makeRepository = (ActivitiesModel) => {
   }
 
   const deleteActivity = async (activity) => {
-    ActivitiesModel.findOneAndDelete({ activityId: activity.activityId });
+    return ActivitiesModel.findOneAndDelete({ activityId: activity.activityId.toString() });
   }
 
   const buildActivity = (event, integrationName) => {

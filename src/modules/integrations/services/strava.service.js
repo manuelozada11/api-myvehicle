@@ -16,18 +16,26 @@ const makeService = (repository) => {
     const stravaConfig = await _getStravaConfigBy({ userExtId: event.owner_id });
     if (!stravaConfig) return;
 
-    // validate if there was saved in our database
-    const localActivity = await _verifyAndSaveActivity({ ...event, integrationName: "strava" });
-    if (localActivity?.distance > 0) return;
+    // get activity details
+    const activityDetails = await _getStravaActivityById(stravaConfig, event.object_id);
+    if (!activityDetails) return;
+
+    // check if activity is a ride
+    if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
 
     // check if activity is a deletion
     const isDeletion = event.aspect_type === 'delete';
+
+    // validate if there was saved in our database
+    const localActivity = await _verifyAndSaveActivity({ ...event, integrationName: "strava" });
+    if (localActivity?.distance > 0 && !isDeletion) return;
+
     if (isDeletion) {
       await _deleteActivity(localActivity, stravaConfig);
       return;
     }
 
-    await _createActivity(event, stravaConfig);
+    await _createActivity(activityDetails, stravaConfig);
     return;
   }
 
@@ -49,14 +57,7 @@ const makeService = (repository) => {
     }
   }
   
-  const _createActivity = async (event, stravaConfig) => {
-    // get activity details
-    const activityDetails = await _getStravaActivityById(stravaConfig, event.object_id);
-    if (!activityDetails) return;
-
-    // check if activity is a ride
-    if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
-
+  const _createActivity = async (activityDetails, stravaConfig) => {
     // find vehicle by gear id
     const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
     if (!bikes.length) return;
@@ -87,14 +88,19 @@ const makeService = (repository) => {
 
   const _deleteActivity = async (activity, stravaConfig) => {
     // delete activity from our database
+    const localActivity = await repository.getActivityByExtId(activity);
+    if (!localActivity) return;
+
     await repository.deleteActivity(activity);
+
+    if (!activity.vehicleExtId) return;
     
     // find vehicle by gear id
-    const bikes = await vehicleService.getVehiclesBy({ "extId": activity.gear_id });
+    const bikes = await vehicleService.getVehiclesBy({ "extId": activity.vehicleExtId });
     if (!bikes.length) return;
 
     // add or subtract mileage to vehicle
-    const distance = activity.distance / 1000;
+    const distance = activity.distance;
     const currentMileage = Number((bikes[0].displacement - distance).toFixed(2));
 
     const updatedVehicle = await vehicleService.updateVehicle({
