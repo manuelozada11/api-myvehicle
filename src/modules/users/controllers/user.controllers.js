@@ -5,7 +5,7 @@ import { validatePassword, validateEmail } from '../users.utils.js';
 
 export const createUser = async (req, res) => {
   try {
-    const fields = _.pick(req.body, "name", "lastname", "email", "phoneNumber", "step", "lang");
+    const fields = _.pick(req.body, "name", "lastname", "email", "phoneNumber", "step", "lang", "country", "termsAccepted");
     const { credentials } = _.pick(req.headers, "credentials");
 
     if (_.isEmpty(credentials))
@@ -18,6 +18,10 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ code: 400, message: 'MISSING_LASTNAME_FIELD' });
     if (_.isEmpty(fields?.lang) && fields?.step > 1)
       return res.status(400).json({ code: 400, message: 'MISSING_LANGUAGE_FIELD' });
+    if (_.isEmpty(fields?.country) && fields?.step > 1)
+      return res.status(400).json({ code: 400, message: 'MISSING_COUNTRY_FIELD' });
+    if (!fields?.termsAccepted && fields?.step > 1)
+      return res.status(400).json({ code: 400, message: 'TERMS_NOT_ACCEPTED' });
     if (_.isEmpty(fields?.email))
       return res.status(400).json({ code: 400, message: 'MISSING_EMAIL_FIELD' });
     if (_.isEmpty(username))

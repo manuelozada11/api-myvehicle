@@ -11,6 +11,9 @@ const userSchema = new mongoose.Schema({
     role: { type: String, required: true },
     status: { type: Boolean, required: true },
     country: { type: String },
+    termsAccepted: { type: Boolean, default: false },
+    subscription: { type: Boolean, default: false },
+    plan: { type: String, enum: ["free", "basic", "business"], default: "free" },
     rate: {
         rating: { type: Number, default: 0 },
         review: { type: String, default: "" },

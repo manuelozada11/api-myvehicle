@@ -7,6 +7,7 @@ import { makeUserRepository } from "../repositories/index.js";
 import bcrypt from 'bcryptjs';
 import { httpClient } from '../../../shared/infra/http/httpClient.js';
 import { config } from "../../../shared/config/config.js";
+import { firstLetterUppercase } from '../../../shared/utils.js';
 
 export const makeService = (repository) => {
   const regexValidation = (string, type, regex) => {
@@ -31,7 +32,7 @@ export const makeService = (repository) => {
     return regex.test(string);
   };
 
-  const createUser = async ({ lang, password, name, lastname, username, email, ...fields }) => {
+  const createUser = async ({ lang, password, name, lastname, username, email, country, termsAccepted, ...fields }) => {
     let response = 1;
     
     if (fields.step === 1) {
@@ -52,6 +53,8 @@ export const makeService = (repository) => {
       name: name.toString().trim(),
       lastname: lastname.toString().trim(),
       phoneNumber: fields.phoneNumber?.toString().trim(),
+      country: country?.toString().trim(),
+      termsAccepted: termsAccepted || false,
       password: hashed,
       role: "customer",
       notifications: [],
