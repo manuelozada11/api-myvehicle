@@ -1,5 +1,5 @@
 import express from "express";
-import { createVehicle, getVehicle, getVehicleInfo, getVehicles, updateVehicle, deleteVehicle, transferVehicle, authorizateTransfer, getExternalVehicles, connectIntegration } from "../controllers/vehicle.controllers.js";
+import { createVehicle, getVehicle, getVehicleInfo, getVehicles, updateVehicle, deleteVehicle, transferVehicle, authorizateTransfer, getExternalVehicles, connectIntegration, getVehicleLimits } from "../controllers/vehicle.controllers.js";
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router
 
 router
     .get('/', getVehicles)
+    .get('/limits', getVehicleLimits)
     .get('/details/:_idVehicle', getVehicle)
     .get('/info/:_idVehicle', getVehicleInfo)
     .get('/externals/:integration', getExternalVehicles);

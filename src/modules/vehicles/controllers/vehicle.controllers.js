@@ -7,13 +7,25 @@ export const createVehicle = async (req, res) => {
         const {
             manufacture,
             model,
+            vehicleType,
             ...data
         } = _.pick(req.body, "manufacture", "model", "year", "displacement", "plateNumber", "type", "energyType", "vehicleType", "from", "extId");
         const user = req.user;
 
         if (!manufacture || !model || !user?._id) return res.status(400).json({ message: 'missing required fields' });
 
-        const result = await vehicleService.createVehicle({ user, manufacture, model, ...data });
+        // Validate vehicle type limit for free plan users
+        const validation = await vehicleService.validateVehicleTypeLimit({ 
+            userId: user._id, 
+            vehicleType, 
+            userPlan: user.subscription?.plan 
+        });
+        
+        if (!validation.isValid) {
+            return res.status(403).json({ message: validation.message });
+        }
+
+        const result = await vehicleService.createVehicle({ user, manufacture, model, vehicleType, ...data });
         if (result.error) return res.status(500).json({ message: result.error });
 
         return res.status(200).json({ message: 'vehicle created successfully' });
@@ -173,6 +185,66 @@ export const connectIntegration = async (req, res) => {
 
         const { code, message } = await vehicleService.connectIntegration({ userId: _id, integrationName, extId, vehicleId, displacement });
         return res.status(code).json({ code, message });
+    } catch (e) {
+        defaultCatcher(e, res);
+    }
+}
+
+export const getVehicleLimits = async (req, res) => {
+    try {
+        const { _id } = _.pick(req.user, '_id');
+        const user = req.user;
+
+        if (!_id) return res.status(400).json({ message: 'missing user id field' });
+
+        const vehicles = await vehicleService.getVehiclesByUser({ _id });
+        const totalVehicles = vehicles.length;
+        
+        // Count vehicles by type
+        const vehicleCounts = {
+            bicycle: vehicles.filter(v => v.vehicleType === 'bicycle').length,
+            motorcycle: vehicles.filter(v => v.vehicleType === 'motorcycle').length,
+            car: vehicles.filter(v => v.vehicleType === 'car').length,
+            truck: vehicles.filter(v => v.vehicleType === 'truck').length,
+            bus: vehicles.filter(v => v.vehicleType === 'bus').length
+        };
+
+        const limits = {
+            plan: user.subscription?.plan || 'free',
+            currentCounts: vehicleCounts,
+            totalVehicles: totalVehicles,
+            limits: {
+                free: {
+                    bicycle: 1,
+                    motorcycle: 1,
+                    car: 1,
+                    truck: 1,
+                    bus: 1,
+                    total: 5 // Maximum 5 vehicles total (1 of each type)
+                },
+                basic: {
+                    bicycle: 6, // Can have up to 6 of any type
+                    motorcycle: 6,
+                    car: 6,
+                    truck: 6,
+                    bus: 6,
+                    total: 6 // Maximum 6 vehicles total
+                },
+                business: {
+                    bicycle: -1, // unlimited
+                    motorcycle: -1,
+                    car: -1,
+                    truck: -1,
+                    bus: -1,
+                    total: -1 // unlimited
+                }
+            }
+        };
+
+        return res.status(200).json({ 
+            message: 'vehicle limits retrieved successfully', 
+            payload: limits 
+        });
     } catch (e) {
         defaultCatcher(e, res);
     }

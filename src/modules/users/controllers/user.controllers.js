@@ -18,8 +18,7 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ code: 400, message: 'MISSING_LASTNAME_FIELD' });
     if (_.isEmpty(fields?.lang) && fields?.step > 1)
       return res.status(400).json({ code: 400, message: 'MISSING_LANGUAGE_FIELD' });
-    if (_.isEmpty(fields?.country) && fields?.step > 1)
-      return res.status(400).json({ code: 400, message: 'MISSING_COUNTRY_FIELD' });
+    // Country is now optional, no validation needed
     if (!fields?.termsAccepted && fields?.step > 1)
       return res.status(400).json({ code: 400, message: 'TERMS_NOT_ACCEPTED' });
     if (_.isEmpty(fields?.email))

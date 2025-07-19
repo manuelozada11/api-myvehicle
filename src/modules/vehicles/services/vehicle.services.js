@@ -164,6 +164,39 @@ export const makeService = (VehicleModel) => {
     return { code: 200, message: 'vehicle connected successfully' };
   }
 
+  const validateVehicleTypeLimit = async ({ userId, vehicleType, userPlan }) => {
+    const existingVehicles = await getVehiclesByUser({ _id: userId });
+    const totalVehicles = existingVehicles.length;
+
+    // Validate for free plan users (1 vehicle per type)
+    if (userPlan === 'free') {
+      if (!vehicleType) {
+        return { isValid: false, message: 'vehicle type is required for free plan users' };
+      }
+
+      const vehiclesOfSameType = existingVehicles.filter(vehicle => vehicle.vehicleType === vehicleType);
+
+      if (vehiclesOfSameType.length >= 1) {
+        return { 
+          isValid: false, 
+          message: `Free plan users can only have one ${vehicleType} vehicle. Please upgrade your plan to add more vehicles.` 
+        };
+      }
+    }
+
+    // Validate for basic plan users (6 vehicles total)
+    if (userPlan === 'basic') {
+      if (totalVehicles >= 6) {
+        return { 
+          isValid: false, 
+          message: 'Basic plan users can only have up to 6 vehicles total. Please upgrade your plan to add more vehicles.' 
+        };
+      }
+    }
+
+    return { isValid: true };
+  }
+
   // Private Functions
   const _getAthleteBikes = async (userConfig) => {
     const athlete = await userService.getStravaAthlete(userConfig);
@@ -189,7 +222,8 @@ export const makeService = (VehicleModel) => {
     deleteVehicle,
     transferVehicle,
     getExternalVehicles,
-    connectIntegration
+    connectIntegration,
+    validateVehicleTypeLimit
   }
 }
 

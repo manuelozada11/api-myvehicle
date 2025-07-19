@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     phoneNumber: { type: String },
     role: { type: String, required: true },
     status: { type: Boolean, required: true },
-    country: { type: String },
+    country: { type: String, default: 'none' },
     termsAccepted: { type: Boolean, default: false },
     subscription: { type: Boolean, default: false },
     plan: { type: String, enum: ["free", "basic", "business"], default: "free" },
