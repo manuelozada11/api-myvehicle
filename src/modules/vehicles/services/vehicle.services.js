@@ -297,8 +297,8 @@ export const makeService = (VehicleModel) => {
     const accumulatedKm = settings.accumulatedKm || 0;
     const resetMaintenanceType = settings.resetMaintenanceType || '';
 
-    const remainingKm = Math.max(0, maintenanceInterval - accumulatedKm);
-    const progressPercentage = Math.min(100, (accumulatedKm / maintenanceInterval) * 100);
+    const remainingKm = Math.max(0, Math.round((maintenanceInterval - accumulatedKm) * 100) / 100);
+    const progressPercentage = Math.min(100, Math.round((accumulatedKm / maintenanceInterval) * 10000) / 100);
     
     let status = 'good';
     if (progressPercentage >= 90) {
