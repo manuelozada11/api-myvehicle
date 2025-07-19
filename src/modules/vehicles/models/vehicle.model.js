@@ -27,6 +27,26 @@ const vehicleSchema = new mongoose.Schema({
     isTransferActivated: { type: Boolean },
     extId: { type: String }, // External ID for integrations
     from: { type: String }, // Source of the vehicle data (e.g., 'strava', 'manual')
+    settings: {
+        maintenanceInterval: { 
+            type: Number, 
+            default: 5000
+        },
+        resetMaintenanceType: {
+            type: String,
+            enum: [
+                // Autos y motos
+                'changeOil', 'changeFuelFilter', 'changeAirFilter', 'changeFrontLights', 'changeBackLights', 'changeInjectorCleaning', 'changeBrake', 'changeCarWashing', 'changeOther',
+                // Bicicletas
+                'bikeGearAdjustment', 'bikeWash', 'bikeTirePressure', 'bikeFullInspection', 'bikeChainLubrication', 'bikeChangeChain', 'bikeChangeBrake', 'bikeOther'
+            ]
+            // default: undefined (no default)
+        },
+        accumulatedKm: {
+            type: Number,
+            default: 0
+        }
+    }
 }, { timestamps: true });
 
 export const VehicleModel = mongoose.model('Vehicle', vehicleSchema);

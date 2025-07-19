@@ -249,3 +249,41 @@ export const getVehicleLimits = async (req, res) => {
         defaultCatcher(e, res);
     }
 }
+
+export const updateVehicleSettings = async (req, res) => {
+    try {
+        const { _id } = _.pick(req.params, '_id');
+        const { _id: userId } = _.pick(req.user, '_id');
+        const { settings } = _.pick(req.body, 'settings');
+
+        if (!_id || !userId) return res.status(400).json({ message: 'missing required fields' });
+        if (!settings || typeof settings !== 'object') return res.status(400).json({ message: 'invalid settings data' });
+
+        const result = await vehicleService.updateVehicleSettings({ userId, vehicleId: _id, settings });
+
+        return res.status(200).json({ 
+            message: 'vehicle settings updated successfully', 
+            payload: result 
+        });
+    } catch (err) {
+        defaultCatcher(err, res);
+    }
+}
+
+export const getMaintenanceStatus = async (req, res) => {
+    try {
+        const { _id } = _.pick(req.params, '_id');
+        const { _id: userId } = _.pick(req.user, '_id');
+
+        if (!_id || !userId) return res.status(400).json({ message: 'missing required fields' });
+
+        const status = await vehicleService.getMaintenanceStatus({ userId, vehicleId: _id });
+
+        return res.status(200).json({ 
+            message: 'maintenance status retrieved successfully', 
+            payload: status 
+        });
+    } catch (err) {
+        defaultCatcher(err, res);
+    }
+}

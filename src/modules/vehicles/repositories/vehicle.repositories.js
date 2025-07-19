@@ -4,7 +4,11 @@ export const makeRepository = (VehicleModel) => {
         getVehicleById: (filter) => VehicleModel.findOne(filter),
         getVehicles: (filter) => VehicleModel.find(filter),
         updateVehicle: ({ userId, vehicleId, ...data }) => {
-            return VehicleModel.findByIdAndUpdate({ "user._id": userId, "_id": vehicleId }, data, { new: true });
+            return VehicleModel.findOneAndUpdate(
+                { "user._id": userId, "_id": vehicleId }, 
+                data, 
+                { new: true }
+            );
         },
         deleteVehicle: (_id) => VehicleModel.deleteOne(_id)
     }

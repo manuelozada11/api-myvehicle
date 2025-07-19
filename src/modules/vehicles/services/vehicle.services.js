@@ -4,6 +4,7 @@ import { maintenanceService } from '../../maintenance/services/maintenance.servi
 import { userService } from '../../users/services/user.service.js';
 import { VehicleModel } from "../models/index.js";
 import { makeVehicleRepository } from "../repositories/index.js";
+import { GENERAL_MAINTENANCE_OPTIONS } from '../../../shared/constants/maintenance.constants.js';
 
 export const makeService = (VehicleModel) => {
   const createVehicle = async ({ user, ...data }) => {
@@ -12,7 +13,17 @@ export const makeService = (VehicleModel) => {
       fullname: `${user.name} ${user.lastname}`
     }
 
-    return await VehicleModel.createVehicle({ user: owner, ...data });
+    // Set default settings based on vehicle type
+    const defaultSettings = {
+      maintenanceInterval: data.vehicleType === 'bicycle' ? 1000 : 5000,
+      accumulatedKm: 0
+    };
+
+    return await VehicleModel.createVehicle({ 
+      user: owner, 
+      settings: defaultSettings,
+      ...data 
+    });
   };
 
   const getVehicleById = async ({ _idUser, _idVehicle }) => {
@@ -81,7 +92,37 @@ export const makeService = (VehicleModel) => {
   }
 
   const updateVehicle = async (data) => {
-    return await VehicleModel.updateVehicle(data);
+    const result = await VehicleModel.updateVehicle(data);
+    
+    // If displacement is being updated, also update accumulated kilometers
+    if (data.displacement && data.userId && data.vehicleId) {
+      const vehicle = await VehicleModel.getVehicleById({ 
+        _id: mongoose.Types.ObjectId(data.vehicleId), 
+        "user._id": mongoose.Types.ObjectId(data.userId) 
+      });
+      
+      if (vehicle && vehicle.settings) {
+        const currentDisplacement = vehicle.displacement || 0;
+        const newDisplacement = data.displacement;
+        const accumulatedKm = vehicle.settings.accumulatedKm || 0;
+        
+        // Calculate the difference and add to accumulated kilometers
+        const kmDifference = newDisplacement - currentDisplacement;
+        if (kmDifference > 0) {
+          const newAccumulatedKm = accumulatedKm + kmDifference;
+          
+          await updateVehicleSettings({
+            userId: data.userId,
+            vehicleId: data.vehicleId,
+            settings: {
+              accumulatedKm: newAccumulatedKm
+            }
+          });
+        }
+      }
+    }
+    
+    return result;
   }
 
   const transferVehicle = async (data) => {
@@ -197,6 +238,86 @@ export const makeService = (VehicleModel) => {
     return { isValid: true };
   }
 
+  const updateVehicleSettings = async ({ userId, vehicleId, settings }) => {
+    // Validate that the vehicle belongs to the user
+    const vehicle = await VehicleModel.getVehicleById({ _id: mongoose.Types.ObjectId(vehicleId), "user._id": mongoose.Types.ObjectId(userId) });
+    if (!vehicle) {
+      throw new Error('Vehicle not found or access denied');
+    }
+
+    // Validate maintenance interval
+    if (settings.maintenanceInterval) {
+      const interval = parseInt(settings.maintenanceInterval);
+      if (isNaN(interval) || interval < 100 || interval > 50000) {
+        throw new Error('Maintenance interval must be between 100 and 50000 kilometers');
+      }
+    }
+
+    // Validate resetMaintenanceType
+    if (settings.resetMaintenanceType) {
+      const validOptions = GENERAL_MAINTENANCE_OPTIONS[vehicle.vehicleType] || [];
+      if (!validOptions.includes(settings.resetMaintenanceType)) {
+        throw new Error('Invalid resetMaintenanceType for this vehicle type');
+      }
+    }
+
+    // Get default settings based on vehicle type
+    const defaultSettings = {
+      maintenanceInterval: vehicle.vehicleType === 'bicycle' ? 1000 : 5000,
+      accumulatedKm: vehicle.settings?.accumulatedKm || 0
+    };
+
+    // Update the vehicle settings
+    const updateData = {
+      userId,
+      vehicleId,
+      settings: {
+        ...defaultSettings,
+        ...vehicle.settings,
+        ...settings
+      }
+    };
+
+    const result = await updateVehicle(updateData);
+    return result;
+  }
+
+  const getMaintenanceStatus = async ({ userId, vehicleId }) => {
+    const vehicle = await VehicleModel.getVehicleById({ 
+      _id: mongoose.Types.ObjectId(vehicleId), 
+      "user._id": mongoose.Types.ObjectId(userId) 
+    });
+    
+    if (!vehicle) {
+      throw new Error('Vehicle not found or access denied');
+    }
+
+    const settings = vehicle.settings || {};
+    const maintenanceInterval = settings.maintenanceInterval || (vehicle.vehicleType === 'bicycle' ? 1000 : 5000);
+    const accumulatedKm = settings.accumulatedKm || 0;
+    const resetMaintenanceType = settings.resetMaintenanceType || '';
+
+    const remainingKm = Math.max(0, maintenanceInterval - accumulatedKm);
+    const progressPercentage = Math.min(100, (accumulatedKm / maintenanceInterval) * 100);
+    
+    let status = 'good';
+    if (progressPercentage >= 90) {
+      status = 'urgent';
+    } else if (progressPercentage >= 75) {
+      status = 'warning';
+    }
+
+    return {
+      maintenanceInterval,
+      accumulatedKm,
+      remainingKm,
+      progressPercentage,
+      status,
+      resetMaintenanceType,
+      needsMaintenance: accumulatedKm >= maintenanceInterval
+    };
+  }
+
   // Private Functions
   const _getAthleteBikes = async (userConfig) => {
     const athlete = await userService.getStravaAthlete(userConfig);
@@ -223,7 +344,9 @@ export const makeService = (VehicleModel) => {
     transferVehicle,
     getExternalVehicles,
     connectIntegration,
-    validateVehicleTypeLimit
+    validateVehicleTypeLimit,
+    updateVehicleSettings,
+    getMaintenanceStatus
   }
 }
 

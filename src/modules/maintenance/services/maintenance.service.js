@@ -1,6 +1,9 @@
 import { vehicleService } from '../../vehicles/services/vehicle.services.js';
 import { MaintenanceModel } from '../models/index.js'
 import { makeMaintenanceRepository } from '../repositories/index.js'
+import { userService } from '../../users/services/user.service.js';
+import { notificationConstants } from '../../../shared/constants/notifications.constants.js';
+import { MAINTENANCE_TYPE_LABELS } from '../../../shared/constants/maintenance.constants.js';
 
 export const makeService = (MaintenanceModel) => {
   const createMaintenance = async ({ vehicleId, user, ...fields }) => {
@@ -23,7 +26,36 @@ export const makeService = (MaintenanceModel) => {
       fields.kms = vehicleResp?.displacement;
     }
 
+    // Check if this maintenance type should reset the accumulated kilometers
+    const vehicleSettings = vehicleResp.settings || {};
+    const resetMaintenanceType = vehicleSettings.resetMaintenanceType || '';
+    let didReset = false;
+    if (fields.adjustments?.includes(resetMaintenanceType)) {
+      // Reset accumulated kilometers
+      await vehicleService.updateVehicleSettings({
+        userId: user._id,
+        vehicleId: vehicleId,
+        settings: {
+          accumulatedKm: 0
+        }
+      });
+      didReset = true;
+    }
+
     await MaintenanceModel.create({ user: owner, vehicle, ...fields });
+
+    // Notificación de reset acumulado
+    if (didReset) {
+      // Obtener idioma del usuario
+      const userDoc = await userService.getUserById({ _id: user._id });
+      const lang = userDoc?.language === 'es' ? 'es' : 'en';
+      const notif = notificationConstants.find(n => n.notificationId === 3);
+      const maintenanceLabel = MAINTENANCE_TYPE_LABELS[lang][resetMaintenanceType] || resetMaintenanceType;
+      let message = notif.message[lang]
+        .replace('{vehicle}', vehicle.fullname)
+        .replace('{maintenanceType}', maintenanceLabel);
+      await userService.addNotification({ _id: user._id, message });
+    }
     return { result: 200, response: 'maintenance created successfully' };
   }
 
