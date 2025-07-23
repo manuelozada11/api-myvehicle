@@ -1,6 +1,6 @@
 import express from "express";
 import { checkAuth } from '../../../shared/middlewares/checkAuth.js';
-import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser, createRateApp, googleSignin, addIntegration, 
+import { createUser, makeSignIn, getUser, getUsers, updateUserInfo, updateUserStatus, updateUserPassword, deleteUser, createRateApp, googleSignin, googleSignup, addIntegration, 
   activateUser, forgotPassword, resetPassword, getUserNotifications, markNotificationsAsRead
  } from "../controllers/user.controllers.js";
 
@@ -10,6 +10,7 @@ router
   .post("/signup", createUser)
   .post('/activate', checkAuth, activateUser)
   .post('/auth/google', googleSignin)
+  .post('/auth/google-signup', googleSignup)
   .post('/integration/:_id', addIntegration)
   .post('/forgot-password', forgotPassword)
   .post('/reset-password', checkAuth, resetPassword)

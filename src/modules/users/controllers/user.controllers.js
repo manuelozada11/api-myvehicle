@@ -93,6 +93,29 @@ export const googleSignin = async (req, res) => {
   }
 }
 
+export const googleSignup = async (req, res) => {
+  try {
+    const fields = _.pick(req.body, "step", "lang", "country", "termsAccepted");
+    const { credentials } = _.pick(req.headers, "credentials");
+
+    if (_.isEmpty(credentials)) return res.status(400).json({ code: 400, message: 'missing credentials' });
+    const [googleToken] = Buffer.from(credentials, 'base64').toString('ascii').split(':');
+
+    if (_.isEmpty(googleToken)) return res.status(400).json({ code: 400, message: 'missing google token' });
+
+    const { code, message, info, token } = await userService.googleSignup({ googleToken, ...fields });
+    if (code > 200) return res.status(code).json({ code, message });
+
+    return res.status(200).json({
+      code: 200,
+      user: info,
+      token
+    });
+  } catch (e) {
+    defaultCatcher(e, res);
+  }
+}
+
 export const getUser = async (req, res) => {
   try {
     const { _idUser } = _.pick(req.params, "_idUser");

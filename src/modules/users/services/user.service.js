@@ -34,7 +34,7 @@ export const makeService = (repository) => {
 
   const createUser = async ({ lang, password, name, lastname, username, email, country, termsAccepted, ...fields }) => {
     let response = 1;
-    
+
     if (fields.step === 1) {
       response = await repository.getUserBy({ username: username });
       if (response) return { code: 400, message: 'USER_ALREADY_EXISTS' };
@@ -166,7 +166,7 @@ export const makeService = (repository) => {
     if (user) return { code: 202, message: 'Integration already exists', name: 'strava', user: getCleanUser(user) };
 
     const athleteToken = await _exchangeCodeForToken(code);
-    
+
     const stravaConfig = {
       name: "strava",
       user: { _id },
@@ -219,15 +219,15 @@ export const makeService = (repository) => {
     // Check if the user exists
     const user = await repository.getUserBy({ email });
     if (!user) return { code: 404, message: 'user not found' };
-    
+
     // Generate a reset token (simple random string, in production use a secure token)
     const userReduced = getCleanUser(user);
-    const token = generateToken(userReduced); 
-    
+    const token = generateToken(userReduced);
+
     const resendKey = config.resend?.api_key;
     if (resendKey) {
       const emailTemplate = emailConstants.find(e => e.emailId === 2);
-  
+
       let html = emailTemplate.html;
       html = html.replace('{{title}}', emailTemplate.title[lang] || '');
       html = html.replace('{{name}}', firstLetterUppercase(userReduced.name) || '');
@@ -277,7 +277,7 @@ export const makeService = (repository) => {
   const markNotificationAsRead = async ({ _id, notificationId }) => {
     try {
       const result = await repository.updateUserBy(
-        { _id, "notifications._id": notificationId }, 
+        { _id, "notifications._id": notificationId },
         { $set: { "notifications.$.read": true } });
 
       if (!result) return { code: 404, message: 'user not found' };
@@ -296,43 +296,68 @@ export const makeService = (repository) => {
     return { code: 200, message: 'notification added successfully' };
   }
 
-  // Private functions
-  const _googleSignin = async (credentials, lang) => {
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-    const ticket = await client.verifyIdToken({
-      idToken: credentials,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
+  const googleSignup = async ({ googleToken, ...fields }) => {
+    const payload = await _googleValidateTicket(googleToken);
+    if (!payload) return { code: 400, message: 'invalid google token' };
 
-    const payload = ticket.getPayload();
+    // we get the user info from the google payload
     const { email, given_name, family_name, picture, sub } = payload;
 
-    let user = await repository.getUsers({ email });
-    if (!user || !user.length) {
-      const basicUser = {
-        name: given_name?.toString().trim().toLowerCase(),
-        lastname: family_name?.toString().trim().toLowerCase(),
-        email,
-        username: sub,
-        password: 'googleauth',
-        role: 'customer',
-        status: true,
-        notifications: [],
-        integrations: [],
-        picture,
-        language: lang
-      }
+    const validate = await repository.getUsers({ email });
+    if (fields?.step === "validate") {
+      if (validate.length > 0) return { code: 400, message: 'user already exists' };
 
-      user = await repository.createUser(basicUser);
-    } else {
-      user = user[0];
-      await repository.updateUserById(user._id, {
-        name: given_name?.toString().trim().toLowerCase(),
-        lastname: family_name?.toString().trim().toLowerCase(),
-        picture
-      });
+      return { code: 200, message: "success", info: { name: given_name, lastname: family_name } };
     }
 
+    const user = {
+      status: true,
+      username: sub,
+      email,
+      name: given_name?.toString().trim().toLowerCase(),
+      lastname: family_name?.toString().trim().toLowerCase(),
+      country: fields.country?.toString().trim() || 'none',
+      termsAccepted: fields.termsAccepted || false,
+      password: 'googleauth',
+      role: "customer",
+      notifications: [],
+      integrations: [],
+      picture,
+      language: fields.lang,
+    }
+
+    const created = await repository.createUser(user);
+
+    const reduced = getCleanUser(created);
+    const token = generateToken(reduced);
+
+    return { code: 200, message: "success", info: reduced, token, user: created }
+  }
+
+  // Private functions
+  const _googleValidateTicket = async (credentials) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({
+      idToken: credentials,
+      audience: clientId
+    });
+
+    if (!ticket) return null;
+    return ticket.getPayload();
+  }
+
+  const _googleSignin = async (credentials) => {
+    const payload = await _googleValidateTicket(credentials);
+    if (!payload) return { code: 400, message: 'invalid google token' };
+
+    // we get the email from the google payload
+    const { email } = payload;
+
+    const users = await repository.getUsers({ email });
+    if (!users.length) return { code: 400, message: 'user not found' };
+
+    const user = users[0];
     const usrReduced = getCleanUser(user);
     const token = generateToken(usrReduced);
 
@@ -438,7 +463,8 @@ export const makeService = (repository) => {
     forgotPassword,
     resetPassword,
     addNotification,
-    markNotificationAsRead
+    markNotificationAsRead,
+    googleSignup
   }
 }
 
