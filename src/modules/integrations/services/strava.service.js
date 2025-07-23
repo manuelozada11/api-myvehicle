@@ -7,6 +7,7 @@ import { makeRepository as makeUserRepo } from '../../../modules/users/repositor
 import { makeRepository as makeIntegrationsRepo } from '../repositories/activities.repository.js';
 import { UserModel } from '../../users/models/user.model.js';
 import { ActivitiesModel } from "../models/activities.model.js";
+import { round } from "../../../shared/utils.js";
 
 const makeService = (repository) => {
   const client = httpClient({ baseURL: config.strava.api_url });
@@ -65,7 +66,7 @@ const makeService = (repository) => {
     if (localActivity?.distance > 0) return;
 
     // find vehicle by gear id
-    const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
+    const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id, noReduce: true });
     if (!bikes.length) return;
 
     // update activity with distance
@@ -74,24 +75,26 @@ const makeService = (repository) => {
     if (!updatedActivity) return;
 
     if (activityDetails.gear.converted_distance) {
+      const bike = bikes[0];
+
       // add or subtract mileage to vehicle
-      const distance = activityDetails.distance / 1000;
-      const currentMileage = Number((bikes[0].displacement + distance).toFixed(2));
+      const distance = round(activityDetails.distance / 1000);
+      const currentMileage = round(bike.displacement + distance);
 
       const updatedVehicle = await vehicleService.updateVehicle({
         userId: stravaConfig.user._id?.toString(),
-        vehicleId: bikes[0]._id,
+        vehicleId: bike._id,
         displacement: currentMileage
       });
 
       // Update accumulated kilometers for maintenance tracking
-      if (bikes[0].settings && bikes[0].settings.accumulatedKm !== undefined) {
-        const currentAccumulatedKm = bikes[0].settings.accumulatedKm || 0;
+      if (bike.settings && bike.settings.accumulatedKm !== undefined) {
+        const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
         const newAccumulatedKm = currentAccumulatedKm + distance;
         
         await vehicleService.updateVehicleSettings({
           userId: stravaConfig.user._id?.toString(),
-          vehicleId: bikes[0]._id,
+          vehicleId: bike._id,
           settings: {
             accumulatedKm: newAccumulatedKm
           }
@@ -101,7 +104,7 @@ const makeService = (repository) => {
       // add notification to user telling that the vehicle was updated
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
-      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+      const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
   }
@@ -131,25 +134,26 @@ const makeService = (repository) => {
 
     if (activityDetails.gear.converted_distance && distanceDifference !== 0) {
       // find vehicle by gear id
-      const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id });
+      const bikes = await vehicleService.getVehiclesBy({ "extId": activityDetails.gear_id, noReduce: true });
       if (!bikes.length) return;
+      const bike = bikes[0];
 
-      // update vehicle mileage
-      const currentMileage = Number((bikes[0].displacement + distanceDifference).toFixed(2));
+      // update vehicle mileaound
+      const currentMileage = round(bike.displacement + distanceDifference);
       const updatedVehicle = await vehicleService.updateVehicle({
         userId: stravaConfig.user._id?.toString(),
-        vehicleId: bikes[0]._id,
+        vehicleId: bike._id,
         displacement: currentMileage
       });
 
       // Update accumulated kilometers for maintenance tracking
-      if (bikes[0].settings && bikes[0].settings.accumulatedKm !== undefined) {
-        const currentAccumulatedKm = bikes[0].settings.accumulatedKm || 0;
-        const newAccumulatedKm = Math.max(0, currentAccumulatedKm + distanceDifference);
+      if (bike.settings && bike.settings.accumulatedKm !== undefined) {
+        const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
+        const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm + distanceDifference));
         
         await vehicleService.updateVehicleSettings({
           userId: stravaConfig.user._id?.toString(),
-          vehicleId: bikes[0]._id,
+          vehicleId: bike._id,
           settings: {
             accumulatedKm: newAccumulatedKm
           }
@@ -159,7 +163,7 @@ const makeService = (repository) => {
       // add notification to user telling that the vehicle was updated
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
-      const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distanceDifference.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+      const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distanceDifference.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
   }
@@ -175,27 +179,28 @@ const makeService = (repository) => {
     if (!localActivity.vehicleExtId) return;
     
     // find vehicle by gear id
-    const bikes = await vehicleService.getVehiclesBy({ "extId": localActivity.vehicleExtId });
+    const bikes = await vehicleService.getVehiclesBy({ "extId": localActivity.vehicleExtId, noReduce: true });
     if (!bikes.length) return;
+    const bike = bikes[0];
 
     // add or subtract mileage to vehicle
     const distance = localActivity.distance;
-    const currentMileage = Number((bikes[0].displacement - distance).toFixed(2));
+    const currentMileage = round(bike.displacement - distance);
 
     const updatedVehicle = await vehicleService.updateVehicle({
       userId: stravaConfig.user._id?.toString(),
-      vehicleId: bikes[0]._id,
+      vehicleId: bike._id,
       displacement: currentMileage
     });
 
     // Update accumulated kilometers for maintenance tracking (subtract the distance)
-    if (bikes[0].settings && bikes[0].settings.accumulatedKm !== 0) {
-      const currentAccumulatedKm = bikes[0].settings.accumulatedKm || 0;
-      const newAccumulatedKm = Math.max(0, currentAccumulatedKm - distance); // Prevent negative values
+    if (bike.settings && bike.settings.accumulatedKm !== 0) {
+      const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
+      const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm - distance)); // Prevent negative values
       
       await vehicleService.updateVehicleSettings({
         userId: stravaConfig.user._id?.toString(),
-        vehicleId: bikes[0]._id,
+        vehicleId: bike._id,
         settings: {
           accumulatedKm: newAccumulatedKm
         }
@@ -205,7 +210,7 @@ const makeService = (repository) => {
     // add notification to user telling that the vehicle was updated
     const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
     const message = notificationConstants.find(n => n.notificationId === 2).message[lang];
-    const notification = message.replace('{vehicle}', bikes[0].fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+    const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
     await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
   }
 

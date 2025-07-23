@@ -63,7 +63,7 @@ export const makeService = (VehicleModel) => {
 
     if (!vehicles.length) return [];
 
-    const vcResponse = vehicles.map(vehicle => {
+    const vcResponse = filter.noReduce ? vehicles : vehicles.map(vehicle => {
       const fullname = `${vehicle.manufacture} ${vehicle.model}`;
       return {
         _id: vehicle._id,

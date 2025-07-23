@@ -1,5 +1,5 @@
 import { emailConstants } from '../../../shared/constants/email.constants.js';
-import { getCleanUser, generateToken, hashPassword } from '../users.utils.js';
+import { getCleanUser, generateToken, hashPassword, regexValidation } from '../users.utils.js';
 import { Resend } from "resend";
 import { OAuth2Client } from 'google-auth-library';
 import { UserModel } from "../models/user.model.js";
@@ -10,28 +10,6 @@ import { config } from "../../../shared/config/config.js";
 import { firstLetterUppercase } from '../../../shared/utils.js';
 
 export const makeService = (repository) => {
-  const regexValidation = (string, type, regex) => {
-    if (!string) return false;
-    switch (type) {
-      case "number":
-        regex = /\d/;
-        break;
-      case "uppercase":
-        regex = /[A-Z]/;
-        break;
-      case "lowercase":
-        regex = /^(?=.*[a-z]).+$/;
-        break;
-      case "username":
-        regex = /^[a-zA-Z0-9]+/;
-        break;
-      default:
-        regex = /^(?=.*\d)(?=.*[A-Z]).{8,}$/;
-        break;
-    }
-    return regex.test(string);
-  };
-
   const createUser = async ({ lang, password, name, lastname, username, email, country, termsAccepted, ...fields }) => {
     let response = 1;
 

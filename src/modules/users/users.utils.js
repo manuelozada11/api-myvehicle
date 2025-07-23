@@ -82,5 +82,6 @@ export {
   generateToken,
   validatePassword,
   validateEmail,
-  hashPassword
+  hashPassword,
+  regexValidation
 }
