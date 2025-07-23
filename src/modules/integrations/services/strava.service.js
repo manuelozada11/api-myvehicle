@@ -88,14 +88,14 @@ const makeService = (repository) => {
       });
 
       // Update accumulated kilometers for maintenance tracking
-      if (bike.settings && bike.settings.accumulatedKm !== undefined) {
-        const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
+      if (bike.maintenance && bike.maintenance.accumulatedKm !== undefined) {
+        const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
         const newAccumulatedKm = currentAccumulatedKm + distance;
         
-        await vehicleService.updateVehicleSettings({
+        await vehicleService.updateVehicleMaintenance({
           userId: stravaConfig.user._id?.toString(),
           vehicleId: bike._id,
-          settings: {
+          maintenance: {
             accumulatedKm: newAccumulatedKm
           }
         });
@@ -147,14 +147,14 @@ const makeService = (repository) => {
       });
 
       // Update accumulated kilometers for maintenance tracking
-      if (bike.settings && bike.settings.accumulatedKm !== undefined) {
-        const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
+      if (bike.maintenance && bike.maintenance.accumulatedKm !== undefined) {
+        const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
         const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm + distanceDifference));
         
-        await vehicleService.updateVehicleSettings({
+        await vehicleService.updateVehicleMaintenance({
           userId: stravaConfig.user._id?.toString(),
           vehicleId: bike._id,
-          settings: {
+          maintenance: {
             accumulatedKm: newAccumulatedKm
           }
         });
@@ -194,14 +194,14 @@ const makeService = (repository) => {
     });
 
     // Update accumulated kilometers for maintenance tracking (subtract the distance)
-    if (bike.settings && bike.settings.accumulatedKm !== 0) {
-      const currentAccumulatedKm = bike.settings.accumulatedKm || 0;
+    if (bike.maintenance && bike.maintenance.accumulatedKm !== 0) {
+      const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
       const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm - distance)); // Prevent negative values
       
-      await vehicleService.updateVehicleSettings({
+      await vehicleService.updateVehicleMaintenance({
         userId: stravaConfig.user._id?.toString(),
         vehicleId: bike._id,
-        settings: {
+        maintenance: {
           accumulatedKm: newAccumulatedKm
         }
       });

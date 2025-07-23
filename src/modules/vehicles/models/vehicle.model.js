@@ -41,10 +41,50 @@ const vehicleSchema = new mongoose.Schema({
                 'bikeGearAdjustment', 'bikeWash', 'bikeTirePressure', 'bikeFullInspection', 'bikeChainLubrication', 'bikeChangeChain', 'bikeChangeBrake', 'bikeOther'
             ]
             // default: undefined (no default)
-        },
+        }
+    },
+    maintenance: {
         accumulatedKm: {
             type: Number,
             default: 0
+        },
+        tires: {
+            frontLeft: { 
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            frontRight: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            rearLeft: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            rearRight: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            spare: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            front: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            },
+            rear: {
+                accumulatedKm: { type: Number, default: 0 },
+                lastChange: { type: Date }
+            }
+        },
+        chain: {
+            accumulatedKm: { type: Number, default: 0 },
+            lastChange: { type: Date }
+        },
+        brakes: {
+            accumulatedKm: { type: Number, default: 0 },
+            lastChange: { type: Date }
         }
     }
 }, { timestamps: true });

@@ -32,10 +32,10 @@ export const makeService = (MaintenanceModel) => {
     let didReset = false;
     if (fields.adjustments?.includes(resetMaintenanceType)) {
       // Reset accumulated kilometers
-      await vehicleService.updateVehicleSettings({
+      await vehicleService.updateVehicleMaintenance({
         userId: user._id,
         vehicleId: vehicleId,
-        settings: {
+        maintenance: {
           accumulatedKm: 0
         }
       });
