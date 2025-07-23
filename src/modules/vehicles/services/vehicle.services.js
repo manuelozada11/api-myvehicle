@@ -341,6 +341,10 @@ export const makeService = (VehicleModel) => {
     };
   }
 
+  const buildVehicleFullname = (vehicle) => {
+    return `${vehicle.manufacture} ${vehicle.model}`;
+  }
+
   // Private Functions
   const _getAthleteBikes = async (userConfig) => {
     const athlete = await userService.getStravaAthlete(userConfig);
@@ -370,7 +374,8 @@ export const makeService = (VehicleModel) => {
     validateVehicleTypeLimit,
     updateVehicleSettings,
     updateVehicleMaintenance,
-    getMaintenanceStatus
+    getMaintenanceStatus,
+    buildVehicleFullname
   }
 }
 

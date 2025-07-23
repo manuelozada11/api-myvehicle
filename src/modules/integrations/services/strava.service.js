@@ -104,7 +104,7 @@ const makeService = (repository) => {
       // add notification to user telling that the vehicle was updated
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
-      const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+      const notification = message.replace('{vehicle}', vehicleService.buildVehicleFullname(bike)).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
   }
@@ -163,7 +163,7 @@ const makeService = (repository) => {
       // add notification to user telling that the vehicle was updated
       const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
       const message = notificationConstants.find(n => n.notificationId === 1).message[lang];
-      const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distanceDifference.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+      const notification = message.replace('{vehicle}', vehicleService.buildVehicleFullname(bike)).replace('{distance}', distanceDifference.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
       await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
     }
   }
@@ -210,7 +210,7 @@ const makeService = (repository) => {
     // add notification to user telling that the vehicle was updated
     const lang = await _getUserLanguage(stravaConfig.user._id?.toString());
     const message = notificationConstants.find(n => n.notificationId === 2).message[lang];
-    const notification = message.replace('{vehicle}', bike.fullname).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
+    const notification = message.replace('{vehicle}', vehicleService.buildVehicleFullname(bike)).replace('{distance}', distance.toFixed(2)).replace('{mileage}', updatedVehicle.displacement);
     await userService.addNotification({ _id: stravaConfig.user._id?.toString(), message: notification });
   }
 
