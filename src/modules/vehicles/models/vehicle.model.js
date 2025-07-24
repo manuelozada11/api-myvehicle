@@ -36,7 +36,7 @@ const vehicleSchema = new mongoose.Schema({
             type: String,
             enum: [
                 // Autos y motos
-                'changeOil', 'changeFuelFilter', 'changeAirFilter', 'changeFrontLights', 'changeBackLights', 'changeInjectorCleaning', 'changeBrake', 'changeCarWashing', 'changeOther',
+                'changeOil', 'changeFuelFilter', 'changeAirFilter', 'changeFrontLights', 'changeBackLights', 'changeInjectorCleaning', 'changeBrake', 'changeCarWashing', 'changeOther', 'changeBattery',
                 // Bicicletas
                 'bikeGearAdjustment', 'bikeWash', 'bikeTirePressure', 'bikeFullInspection', 'bikeChainLubrication', 'bikeChangeChain', 'bikeChangeBrake', 'bikeOther'
             ]
@@ -83,6 +83,10 @@ const vehicleSchema = new mongoose.Schema({
             lastChange: { type: Date }
         },
         brakes: {
+            accumulatedKm: { type: Number, default: 0 },
+            lastChange: { type: Date }
+        },
+        battery: {
             accumulatedKm: { type: Number, default: 0 },
             lastChange: { type: Date }
         }

@@ -13,13 +13,37 @@ export const makeService = (MaintenanceModel) => {
     if (!vehicleResp) return { result: 404, response: 'vehicle not found' };
 
     const owner = { _id, fullname: `${name} ${lastname}` };
-    const vehicle = { _id: vehicleId, fullname: `${vehicleResp.manufacture} ${vehicleResp.model}` };
+    const vehicle = { _id: vehicleId, fullname: vehicleService.buildVehicleFullname(vehicleResp) };
 
     if (fields?.kms) {
+      const currentKm = vehicleResp?.displacement;
+      const currentBatteryKm = vehicleResp.maintenance.battery.accumulatedKm || 0;
+      const currentChainKm = vehicleResp.maintenance.chain.accumulatedKm || 0;
+      const currentBrakesKm = vehicleResp.maintenance.brakes.accumulatedKm || 0;
+
+      const newKm = fields.kms;
+      const kmDifference = newKm - currentKm;
+      const newAccumulatedKm = vehicleResp.maintenance.accumulatedKm + kmDifference;
+      const newBatteryKm = currentBatteryKm + kmDifference;
+      const newChainKm = currentChainKm + kmDifference;
+      const newBrakesKm = currentBrakesKm + kmDifference;
+
       await vehicleService.updateVehicle({
         userId: user._id,
         vehicleId: vehicleId,
-        displacement: fields.kms
+        displacement: newKm,
+        maintenance: {
+          accumulatedKm: newAccumulatedKm,
+          battery: {
+            accumulatedKm: newBatteryKm
+          },
+          chain: {
+            accumulatedKm: newChainKm
+          },
+          brakes: {
+            accumulatedKm: newBrakesKm
+          }
+        }
       });
     }
     else {
@@ -36,7 +60,49 @@ export const makeService = (MaintenanceModel) => {
         userId: user._id,
         vehicleId: vehicleId,
         maintenance: {
-          accumulatedKm: 0
+          accumulatedKm: 0,
+        }
+      });
+      didReset = true;
+    }
+
+    // Check if this maintenance type should reset the accumulated kilometers brakes
+    if (fields.adjustments?.includes('bikeChangeBrake') || fields.adjustments?.includes('changeBrake')) {
+      await vehicleService.updateVehicleMaintenance({
+        userId: user._id,
+        vehicleId: vehicleId,
+        maintenance: {
+          brakes: {
+            accumulatedKm: 0
+          }
+        }
+      });
+      didReset = true;
+    }
+
+    // Check if this maintenance type should reset the accumulated kilometers chain
+    if (fields.adjustments?.includes('bikeChangeChain') || fields.adjustments?.includes('changeChain')) {
+      await vehicleService.updateVehicleMaintenance({
+        userId: user._id,
+        vehicleId: vehicleId,
+        maintenance: {
+          chain: {
+            accumulatedKm: 0
+          }
+        }
+      });
+      didReset = true;
+    }
+
+    // Check if this maintenance type should reset the accumulated kilometers battery
+    if (fields.adjustments?.includes('changeBattery')) {
+      await vehicleService.updateVehicleMaintenance({
+        userId: user._id,
+        vehicleId: vehicleId,
+        maintenance: {
+          battery: {
+            accumulatedKm: 0
+          }
         }
       });
       didReset = true;
@@ -56,6 +122,7 @@ export const makeService = (MaintenanceModel) => {
         .replace('{maintenanceType}', maintenanceLabel);
       await userService.addNotification({ _id: user._id, message });
     }
+
     return { result: 200, response: 'maintenance created successfully' };
   }
 
@@ -113,12 +180,12 @@ export const makeService = (MaintenanceModel) => {
     );
 
     // Último mantenimiento y próximo mantenimiento
-    if (!lastMaintenance) return { result: 404, response: "no maintenances found", stats: null }; 
-      response.lastMaintenanceDate = lastMaintenance.date;
-      const lastDate = new Date(lastMaintenance.date);
-      const nextMaintDate = new Date(lastDate);
-      nextMaintDate.setFullYear(lastDate.getFullYear() + 1);
-      response.nextMaintenanceDate = nextMaintDate;
+    if (!lastMaintenance) return { result: 404, response: "no maintenances found", stats: null };
+    response.lastMaintenanceDate = lastMaintenance.date;
+    const lastDate = new Date(lastMaintenance.date);
+    const nextMaintDate = new Date(lastDate);
+    nextMaintDate.setFullYear(lastDate.getFullYear() + 1);
+    response.nextMaintenanceDate = nextMaintDate;
 
     return {
       result: 200,

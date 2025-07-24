@@ -52,12 +52,12 @@ const makeService = (repository) => {
       return null;
     }
   }
-  
+
   const _createActivity = async (event, stravaConfig) => {
     // get activity details
     const activityDetails = await _getStravaActivityById(stravaConfig, event.object_id);
     if (!activityDetails) return;
-    
+
     // check if activity is a ride
     if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
 
@@ -90,13 +90,36 @@ const makeService = (repository) => {
       // Update accumulated kilometers for maintenance tracking
       if (bike.maintenance && bike.maintenance.accumulatedKm !== undefined) {
         const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
+        const currentFrontTireKm = bike.maintenance.tires.front.accumulatedKm || 0;
+        const currentRearTireKm = bike.maintenance.tires.rear.accumulatedKm || 0;
+        const currentChainKm = bike.maintenance.chain.accumulatedKm || 0;
+        const currentBrakesKm = bike.maintenance.brakes.accumulatedKm || 0;
+
         const newAccumulatedKm = currentAccumulatedKm + distance;
-        
+        const newFrontTireKm = currentFrontTireKm + distance;
+        const newRearTireKm = currentRearTireKm + distance;
+        const newChainKm = currentChainKm + distance;
+        const newBrakesKm = currentBrakesKm + distance;
+
         await vehicleService.updateVehicleMaintenance({
           userId: stravaConfig.user._id?.toString(),
           vehicleId: bike._id,
           maintenance: {
-            accumulatedKm: newAccumulatedKm
+            accumulatedKm: newAccumulatedKm,
+            tires: {
+              front: {
+                accumulatedKm: newFrontTireKm
+              },
+              rear: {
+                accumulatedKm: newRearTireKm
+              }
+            },
+            chain: {
+              accumulatedKm: newChainKm
+            },
+            brakes: {
+              accumulatedKm: newBrakesKm
+            }
           }
         });
       }
@@ -113,7 +136,7 @@ const makeService = (repository) => {
     // get activity details
     const activityDetails = await _getStravaActivityById(stravaConfig, event.object_id);
     if (!activityDetails) return;
-    
+
     // check if activity is a ride
     if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
 
@@ -149,13 +172,36 @@ const makeService = (repository) => {
       // Update accumulated kilometers for maintenance tracking
       if (bike.maintenance && bike.maintenance.accumulatedKm !== undefined) {
         const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
+        const currentFrontTireKm = bike.maintenance.tires.front.accumulatedKm || 0;
+        const currentRearTireKm = bike.maintenance.tires.rear.accumulatedKm || 0;
+        const currentChainKm = bike.maintenance.chain.accumulatedKm || 0;
+        const currentBrakesKm = bike.maintenance.brakes.accumulatedKm || 0;
+
         const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm + distanceDifference));
-        
+        const newFrontTireKm = round(Math.max(0, currentFrontTireKm + distanceDifference));
+        const newRearTireKm = round(Math.max(0, currentRearTireKm + distanceDifference));
+        const newChainKm = round(Math.max(0, currentChainKm + distanceDifference));
+        const newBrakesKm = round(Math.max(0, currentBrakesKm + distanceDifference));
+
         await vehicleService.updateVehicleMaintenance({
           userId: stravaConfig.user._id?.toString(),
           vehicleId: bike._id,
           maintenance: {
-            accumulatedKm: newAccumulatedKm
+            accumulatedKm: newAccumulatedKm,
+            tires: {
+              front: {
+                accumulatedKm: newFrontTireKm
+              },
+              rear: {
+                accumulatedKm: newRearTireKm
+              }
+            },
+            chain: {
+              accumulatedKm: newChainKm
+            },
+            brakes: {
+              accumulatedKm: newBrakesKm
+            }
           }
         });
       }
@@ -172,12 +218,12 @@ const makeService = (repository) => {
     const parsedEvent = repository.buildActivity(event, "strava");
     const localActivity = await repository.getActivityByExtId(parsedEvent);
     if (!localActivity) return;
-    
+
     // delete activity from our database
     await repository.deleteActivity(localActivity);
 
     if (!localActivity.vehicleExtId) return;
-    
+
     // find vehicle by gear id
     const bikes = await vehicleService.getVehiclesBy({ "extId": localActivity.vehicleExtId, noReduce: true });
     if (!bikes.length) return;
@@ -196,13 +242,37 @@ const makeService = (repository) => {
     // Update accumulated kilometers for maintenance tracking (subtract the distance)
     if (bike.maintenance && bike.maintenance.accumulatedKm !== 0) {
       const currentAccumulatedKm = bike.maintenance.accumulatedKm || 0;
+      const currentFrontTireKm = bike.maintenance.tires.front.accumulatedKm || 0;
+      const currentRearTireKm = bike.maintenance.tires.rear.accumulatedKm || 0;
+      const currentChainKm = bike.maintenance.chain.accumulatedKm || 0;
+      const currentBrakesKm = bike.maintenance.brakes.accumulatedKm || 0;
+
+
       const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm - distance)); // Prevent negative values
-      
+      const newFrontTireKm = round(Math.max(0, currentFrontTireKm - distance));
+      const newRearTireKm = round(Math.max(0, currentRearTireKm - distance));
+      const newChainKm = round(Math.max(0, currentChainKm - distance));
+      const newBrakesKm = round(Math.max(0, currentBrakesKm - distance));
+
       await vehicleService.updateVehicleMaintenance({
         userId: stravaConfig.user._id?.toString(),
         vehicleId: bike._id,
         maintenance: {
-          accumulatedKm: newAccumulatedKm
+          accumulatedKm: newAccumulatedKm,
+          tires: {
+            front: {
+              accumulatedKm: newFrontTireKm
+            },
+            rear: {
+              accumulatedKm: newRearTireKm
+            }
+          },
+          chain: {
+            accumulatedKm: newChainKm
+          },
+          brakes: {
+            accumulatedKm: newBrakesKm
+          }
         }
       });
     }

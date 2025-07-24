@@ -1,13 +1,11 @@
-import { emailConstants } from '../../../shared/constants/email.constants.js';
 import { getCleanUser, generateToken, hashPassword, regexValidation } from '../users.utils.js';
-import { Resend } from "resend";
 import { OAuth2Client } from 'google-auth-library';
 import { UserModel } from "../models/user.model.js";
 import { makeUserRepository } from "../repositories/index.js";
 import bcrypt from 'bcryptjs';
 import { httpClient } from '../../../shared/infra/http/httpClient.js';
 import { config } from "../../../shared/config/config.js";
-import { firstLetterUppercase } from '../../../shared/utils.js';
+import { emailService } from '../../../shared/services/email.service.js';
 
 export const makeService = (repository) => {
   const createUser = async ({ lang, password, name, lastname, username, email, country, termsAccepted, ...fields }) => {
@@ -42,27 +40,20 @@ export const makeService = (repository) => {
 
     response = await repository.createUser(user);
 
-    const resendKey = config.resend?.api_key;
-    if (resendKey) {
-      const resend = new Resend(resendKey);
-      const email = emailConstants.find(e => e.emailId === 1);
-
+    // Send welcome email using AWS SES
+    try {
       const usrReduced = getCleanUser(response);
       const token = generateToken(usrReduced);
 
-      let html = email.html;
-      html = html.replace('{{title}}', email.title[lang] || '');
-      html = html.replace('{{name}}', firstLetterUppercase(user?.name) || '');
-      html = html.replace('{{body}}', email.body[lang] || '');
-      html = html.replace('{{btnName}}', email.btnName[lang] || '');
-      html = html.replace('{{token}}', token);
-
-      await resend.emails.send({
-        from: config.resend.from,
+      await emailService.sendWelcomeEmail({
         to: user.email,
-        subject: email.subject[lang],
-        html
+        name: user.name,
+        token,
+        lang
       });
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+      // Don't fail user creation if email fails
     }
 
     return { code: 200, message: 'USER_CREATED_SUCCESSFULLY' };
@@ -202,24 +193,17 @@ export const makeService = (repository) => {
     const userReduced = getCleanUser(user);
     const token = generateToken(userReduced);
 
-    const resendKey = config.resend?.api_key;
-    if (resendKey) {
-      const emailTemplate = emailConstants.find(e => e.emailId === 2);
-
-      let html = emailTemplate.html;
-      html = html.replace('{{title}}', emailTemplate.title[lang] || '');
-      html = html.replace('{{name}}', firstLetterUppercase(userReduced.name) || '');
-      html = html.replace('{{body}}', emailTemplate.body[lang] || '');
-      html = html.replace('{{btnName}}', emailTemplate.btnName[lang] || '');
-      html = html.replace('{{token}}', token);
-
-      const resend = new Resend(resendKey);
-      await resend.emails.send({
-        from: config.resend.from,
+    // Send password reset email using AWS SES
+    try {
+      await emailService.sendPasswordResetEmail({
         to: user.email,
-        subject: emailTemplate.subject[lang],
-        html
+        name: userReduced.name,
+        token,
+        lang
       });
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      return { code: 500, message: 'error sending reset email' };
     }
 
     return { code: 200, message: 'reset password email sent' };

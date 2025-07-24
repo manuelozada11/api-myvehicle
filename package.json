@@ -10,12 +10,12 @@
     "dev-docker": "nodemon --inspect=0.0.0.0 src/index.js",
     "migrate:vehicle-settings": "node src/scripts/migrate-vehicle-settings.js",
     "migrate:vehicle-settings-advanced": "node src/scripts/migrate-vehicle-settings-advanced.js",
-    "check:vehicle-settings": "node src/scripts/check-vehicle-settings.js",
-    "test:migration": "node src/scripts/test-migration.js"
+    "check:vehicle-settings": "node src/scripts/check-vehicle-settings.js"
   },
   "author": "manuel lozada",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.848.0",
     "@sentry/node": "^7.13.0",
     "@sentry/tracing": "^7.13.0",
     "axios": "^1.10.0",
