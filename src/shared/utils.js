@@ -7,6 +7,6 @@ export const firstLetterUppercase = (value) => {
 }
 
 export const round = (value, decimals = 2) => {
-  if (!value) return 0;
+  if (!value || value <= 0) return 0;
   return Number(value.toFixed(decimals));
 }

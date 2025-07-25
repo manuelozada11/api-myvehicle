@@ -62,6 +62,9 @@ const makeService = (repository) => {
     // check if activity is a ride
     if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
 
+    // check if activity has distance
+    if (activityDetails.distance <= 0) return;
+
     // validate if there was saved in our database
     const localActivity = await _verifyAndSaveActivity({ ...event, integrationName: "strava" });
     if (localActivity?.distance > 0) return;
@@ -231,7 +234,7 @@ const makeService = (repository) => {
     const bike = bikes[0];
 
     // add or subtract mileage to vehicle
-    const distance = localActivity.distance;
+    const distance = localActivity.distance || 0;
     const currentMileage = round(bike.displacement - distance);
 
     const updatedVehicle = await vehicleService.updateVehicle({
@@ -247,7 +250,6 @@ const makeService = (repository) => {
       const currentRearTireKm = bike.maintenance.tires.rear.accumulatedKm || 0;
       const currentChainKm = bike.maintenance.chain.accumulatedKm || 0;
       const currentBrakesKm = bike.maintenance.brakes.accumulatedKm || 0;
-
 
       const newAccumulatedKm = round(Math.max(0, currentAccumulatedKm - distance)); // Prevent negative values
       const newFrontTireKm = round(Math.max(0, currentFrontTireKm - distance));
