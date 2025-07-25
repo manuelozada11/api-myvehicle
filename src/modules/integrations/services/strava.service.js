@@ -13,6 +13,7 @@ const makeService = (repository) => {
   const client = httpClient({ baseURL: config.strava.api_url });
 
   const handleActivity = async (event) => {
+    console.log("event: ", event);
     // get user
     const stravaConfig = await _getStravaConfigBy({ userExtId: event.owner_id });
     if (!stravaConfig) return;
