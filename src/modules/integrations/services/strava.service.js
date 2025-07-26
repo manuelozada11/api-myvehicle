@@ -144,6 +144,9 @@ const makeService = (repository) => {
     // check if activity is a ride
     if (activityDetails.type !== 'Ride' && !activityDetails.sport_type.includes('Ride')) return;
 
+    // check if activity has distance
+    if (activityDetails.distance <= 0) return;
+
     // find existing activity in our database
     const parsedEvent = repository.buildActivity(event, "strava");
     const localActivity = await repository.getActivityByExtId(parsedEvent);
@@ -151,8 +154,11 @@ const makeService = (repository) => {
 
     // calculate the difference in distance
     const oldDistance = localActivity.distance || 0;
-    const newDistance = activityDetails.distance / 1000;
+    const newDistance = round(activityDetails.distance / 1000);
     const distanceDifference = newDistance - oldDistance;
+
+    // check if distance difference is greater than 0
+    if (distanceDifference <= 0) return;
 
     // update activity with new distance
     const ourActivity = await repository.buildActivity(activityDetails, "strava");
